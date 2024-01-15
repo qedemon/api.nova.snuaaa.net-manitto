@@ -9,9 +9,10 @@ module.exports = (sequelize, DataTypes)=>{
             type: DataTypes.STRING(16),
             allowNull: false
         },
-        password: {
-            type: DataTypes.STRING(64),
-            allowNull: false
+        id:{
+            type: DataTypes.STRING(16),
+            allowNull: false,
+            primaryKey: false
         },
         col_no: {
             type: DataTypes.STRING(8)

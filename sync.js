@@ -7,13 +7,13 @@ const run = async ()=>{
         console.error(error);
         return;
     }
-    await Promise.all(
-        models.map(
-            async ({model})=>{
+    await models.reduce(
+            async (last, {model})=>{
+                await last;
                 const Model = model(sequelize, sequelize.Sequelize.DataTypes);
-                await Model.sync();
-            }
-        )
+                await Model.sync({force: true});
+            },
+            Promise.resolve()
     )
     await closeSequelize(sequelize);
 }
