@@ -1,25 +1,23 @@
 const {createSequelize, closeSequelize} = require("modules/sequelize");
 const defineUser = require("models/User");
 
-async function createUser({name, password, col_no}){
+async function getUser(condition){
     const {sequelize} = await createSequelize();
     const User = defineUser(sequelize, sequelize.Sequelize.DataTypes);
     try{
-        const user = await User.create({
-            name, password, col_no
-        });
-        return {
-            user
-        }
+        const user = await User.findOne(
+            {
+                where: condition
+            }
+        )
+        return {user};
     }
     catch(error){
-        return {
-            error
-        }
+        return {error};
     }
     finally{
         await closeSequelize(sequelize);
     }
 }
 
-module.exports = createUser;
+module.exports = getUser;

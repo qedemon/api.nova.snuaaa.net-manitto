@@ -2,5 +2,9 @@
     {
         "name": "user",
         "route": "modules/user"
+    },
+    {
+        "name": "authenticate",
+        "route": "modules/authenticate"
     }
 ]
