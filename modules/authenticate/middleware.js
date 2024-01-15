@@ -1,25 +1,29 @@
-const {authenticate, createToken} = require("./module");
+const {authenticate} = require("./module");
 const express = require("express");
 
 const app = express();
 app.use("/", express.json());
 app.post("/", async (req, res)=>{
-    const {name, col_no, password} = req.body;
-    const result = 
-    await (
-        async (name, col_no, password)=>{
-            try{
-                const {error, authenticated, user} = await authenticate(name, col_no, password);
-                if(error)
-                    throw error;
-                const token = authenticated?createToken(user):null;
-                return {authenticated, token};
-            }
-            catch(error){
-                return {error};
+    const {id, password} = req.body;
+    const result = await (async (id, password)=>{
+        const {authenticated, userInfo, token, error} = await authenticate(id, password);
+        if(authenticated){
+            return {
+                authenticated,
+                userInfo,
+                token
             }
         }
-    )(name, col_no, password);
+        else{
+            return {
+                authenticated,
+                error
+            }
+        }
+    })(id, password);
+
+    if(result.token)
+        res.append("Set-Cookie", `token=${result.token}; Path=/;`);
     res.json(result);
 });
 

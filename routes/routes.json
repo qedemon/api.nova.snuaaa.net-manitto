@@ -6,5 +6,9 @@
     {
         "name": "authenticate",
         "route": "modules/authenticate"
+    },
+    {
+        "name": "authorize",
+        "route": "modules/authorize"
     }
 ]
