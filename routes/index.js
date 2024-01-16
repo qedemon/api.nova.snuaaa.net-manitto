@@ -9,7 +9,7 @@ module.exports = async ()=>{
         routes.map(
             async ({name, route})=>{
                 try{
-                    const loaded_module = await (require(route)());
+                    const loaded_module = await (require(route));
                     if(loaded_module.middleware){
                         app.use(`/${name}`, loaded_module.middleware);   
                     }
