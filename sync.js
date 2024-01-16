@@ -11,7 +11,7 @@ const run = async ()=>{
             async (last, {model})=>{
                 await last;
                 const Model = model(sequelize, sequelize.Sequelize.DataTypes);
-                await Model.sync({force: true});
+                await Model.sync({alter: true});
             },
             Promise.resolve()
     )

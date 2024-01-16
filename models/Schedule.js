@@ -12,5 +12,8 @@ module.exports = (sequelize, DataTypes)=>{
             allowNull: true
         }
     });
+    User.hasOne(Schedule);
+    Schedule.belongsTo(User);
+    Schedule.User;
     return Schedule;
 }

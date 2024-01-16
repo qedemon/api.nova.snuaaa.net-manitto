@@ -4,7 +4,7 @@ const cookieParser = require("cookie-parser");
 
 const app = express();
 app.use("/", cookieParser());
-app.get("/", async (req, res)=>{
+app.use("/", async (req, res, next)=>{
     const token = 
     (
         (match)=>{
@@ -19,22 +19,17 @@ app.get("/", async (req, res)=>{
     )(req.headers.authorization?.match(/^bearer /i)) || req.cookies.token;
 
     const {authorized, userInfo, error} = await authorize(token);
-    if(authorized){
-        res.json(
-            {
-                authorized,
+    req.authorization={
+        authorized,
+        ...(
+            authorized?{
                 userInfo
-            }
-        )
-    }
-    else{
-        res.json(
-            {
-                authorized,
+            }:{
                 error
             }
         )
     }
+    next();
 })
 
 module.exports = app;

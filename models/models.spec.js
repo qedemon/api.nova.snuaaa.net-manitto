@@ -4,20 +4,16 @@ const defineConnection = require("./Connection");
 
 test("connection", async ()=>{
     const {sequelize} = await createSequelize();
-    const User = defineUser(sequelize, sequelize.Sequelize.DataTypes);
     const Connection = defineConnection(sequelize, sequelize.Sequelize.DataTypes);
-    User.belongsToMany(User, {through: Connection, as: "Followers", foreignKey: "followee_id"});
-    User.belongsToMany(User, {through: Connection, as: "Followees", foreignKey: "follower_id"});
+    const User = Connection.User;
 
     const userInfos = [
         {
-            user_id: 2,
             name: "A AA",
             id: "aaa",
             col_no: "23"
         },
         {
-            user_id: 3,
             name: "B BB",
             id: "bbb",
             col_no: "23"
@@ -27,10 +23,10 @@ test("connection", async ()=>{
     const users = await userInfos.reduce(
         async (last, userInfo)=>{
             const result = await last;
-            const {user_id, name, id, col_no} = userInfo;
+            const {name, id, col_no} = userInfo;
             const user = await User.findOne({
                 where: {
-                    user_id
+                    name, id, col_no
                 }
             });
             if(user){
@@ -39,7 +35,7 @@ test("connection", async ()=>{
             else{
                 const user = await User.create(
                     {
-                        user_id, name, id, col_no
+                        name, id, col_no
                     }
                 );
                 return [...result, user];
@@ -47,22 +43,55 @@ test("connection", async ()=>{
         },
         Promise.resolve([])
     );
+    const connection = await users[0].createFollowing();
+    await connection.setFollowee(users[1]);
+    
+    await users.reduce(
+        async (last, user)=>{
+            const result = await last;
+            const reloaded = await user.reload(
+                {
+                    include: [
+                        {
+                            model: Connection,
+                            as: "Following",
+                            include: {
+                                model: User,
+                                as: "Followee"
+                            }
+                        },
+                        {
+                            model: Connection,
+                            as: "Followed",
+                            include: {
+                                model: User,
+                                as: "Follower"
+                            }
+                        },
+                    ]
+                }
+            );
+            return [...result, reloaded];
+        },
+        Promise.resolve([])
+    );
+    
+    expect(users[0].Following[0].Followee.user_id).toBe(users[1].user_id);
 
-    try{
-        await users[0].addFollower(users[1], {through: {expired_at: "2024-01-14 21:00:00+09"}});
-        const followers = await users[0].getFollowers(
-            {
-                joinTableAttributes: ['expired_at']
+    await User.destroy(
+        {
+            where: {
+                user_id: users.map(({user_id})=>user_id)
             }
-        )
-        const valid = followers.filter(({Connection:{expired_at}})=>expired_at===null);
-        console.log(valid.map(({name})=>name));
-    }
-    catch(error){
-        console.log(error);
-    }
-    finally{
-        await closeSequelize(sequelize);
-    }
+        }
+    );
+    await Connection.destroy(
+        {
+            where: {
+                id: connection.id
+            }
+        }
+    );
+    await closeSequelize(sequelize);
 
 })

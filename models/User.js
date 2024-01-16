@@ -17,6 +17,10 @@ module.exports = (sequelize, DataTypes)=>{
         col_no: {
             type: DataTypes.STRING(8)
         },
+        isAdmin: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false
+        }
     });
     return User;
 }
