@@ -14,12 +14,12 @@ async function getConnections(follower_id=null, followee_id=null, include_expire
                     {
                         model: User,
                         as: "Follower",
-                        attributes: ["user_id"]
+                        attributes: ["user_id", "name", "col_no", "major"]
                     },
                     {
                         model: User,
                         as: "Followee",
-                        attributes: ["user_id"]
+                        attributes: ["user_id", "name", "col_no", "major"]
                     }
                 ],
                 where: 
