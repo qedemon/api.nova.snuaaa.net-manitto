@@ -9,34 +9,13 @@ function attachWhoAmI(app){
             if(!req.authorization?.authorized){
                 throw new Error("unauthorized");
             }
-            const {user, error} = await getUser({user_id: req.authorization.userInfo.user_id});
-            if(error)
-                throw error;
-            if(user){
-                res.json(
-                    {
-                        result: Result.success,
-                        user,
-                        origin: "local"
-                    }
-                )
-            }
-            else{
-                const {user_id, id, username: name, col_no} = req.authorization.userInfo;
-                res.json(
-                    {
-                        result: Result.success,
-                        user: {
-                            user_id,
-                            id,
-                            name,
-                            col_no,
-                            isAdmin: false
-                        },
-                        origin: "remote"
-                    }
-                )
-            }
+            res.json(
+                {
+                    result: Result.success,
+                    userInfo: req.authorization.userInfo,
+                    origin: req.authorization.origin
+                }
+            )
         } 
         catch(error){
             res.json(

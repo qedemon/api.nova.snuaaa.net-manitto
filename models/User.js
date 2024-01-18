@@ -20,6 +20,9 @@ module.exports = (sequelize, DataTypes)=>{
         isAdmin: {
             type: DataTypes.BOOLEAN,
             defaultValue: false
+        },
+        major: {
+            type: DataTypes.STRING(64)
         }
     });
     return User;

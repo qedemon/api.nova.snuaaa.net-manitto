@@ -18,12 +18,13 @@ app.use("/", async (req, res, next)=>{
         }
     )(req.headers.authorization?.match(/^bearer /i)) || req.cookies.token;
 
-    const {authorized, userInfo, error} = await authorize(token);
+    const {authorized, userInfo, origin, error} = await authorize(token);
     req.authorization={
         authorized,
         ...(
             authorized?{
-                userInfo
+                userInfo,
+                origin
             }:{
                 error
             }

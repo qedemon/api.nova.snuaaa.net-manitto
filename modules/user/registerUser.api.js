@@ -11,8 +11,8 @@ function attachRegisterUser(app){
             if(!(req.authorization?.authorized)){
                 throw new Error("remote authorization failed.");
             }
-            const remoteUserInfo = req.authorization.userInfo;
-            const {user, error, result} = await registerUser(remoteUserInfo);
+            const userInfo = req.authorization.userInfo;
+            const {user, error, result} = await registerUser(userInfo);
             if(result===Result.fail){
                 throw error;
             }

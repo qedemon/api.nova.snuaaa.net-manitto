@@ -8,27 +8,15 @@ async function registerUser(user_info){
     const DataTypes = sequelize.Sequelize.DataTypes;
     const User = defineUser(sequelize, DataTypes);
     
-    const {user_id, id, username: name, col_no} = user_info;
     try{
-        const {user} = await getUser({user_id});
+        const {user} = await getUser({user_id: user_info.user_id});
         if(user){
             throw new Error("alread exists");
         }
-        const regiteredUser = await User.create({
-            user_id, id, name, col_no
-        });
+        const regiteredUser = await User.create(user_info);
         return {
             result: Result.success,
-            user: (
-                ({user_id, id, name, col_no})=>{
-                    return {
-                        user_id,
-                        id,
-                        name,
-                        col_no,
-                    }
-                }
-            )(regiteredUser)
+            user: regiteredUser
         }
     }
     catch(error){
