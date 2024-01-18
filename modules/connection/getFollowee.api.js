@@ -8,7 +8,7 @@ function attachGetFollowee(app){
         const authorization = req.authorization;
         const target_user_id = authorization?.userInfo?.user_id;
         if(target_user_id){
-            res.redirect(`${target_user_id}`);
+            res.redirect(`getFollowee/${target_user_id}`);
         }
     })
     app.get("/getFollowee/:target_user_id", async (req, res)=>{
