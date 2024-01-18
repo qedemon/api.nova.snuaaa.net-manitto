@@ -1,11 +1,11 @@
-const authenticateModule = require("./module");
+const authorizeModule = require("./module");
 const middleware = require("./middleware");
 
 module.exports = (
     async ()=>{
-        console.log("authenticate module loaded.");
+        console.log("authorize module loaded.");
         return {
-            module: authenticateModule,
+            module: authorizeModule,
             middleware
         }
     }

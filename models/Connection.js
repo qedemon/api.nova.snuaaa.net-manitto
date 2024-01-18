@@ -1,21 +1,19 @@
+const defineUser = require("./User");
+
 module.exports = (sequelize, DataTypes)=>{
-    const User = sequelize.define('User', {
-        user_id:{
-            type: DataTypes.INTEGER,
-            autoIncrement: true,
-            primaryKey: true
-        },
-        name: {
-            type: DataTypes.STRING(16),
-            allowNull: false
-        },
-        password: {
-            type: DataTypes.STRING(64),
-            allowNull: false
-        },
-        col_no: {
-            type: DataTypes.STRING(8)
-        },
+    const User = defineUser(sequelize, DataTypes);
+    const Connection = sequelize.define("Connection", {
+        expired_at:{
+            type: DataTypes.DATE
+        }
     });
-    return User;
+    
+    User.hasMany(Connection, {as: "Following", foreignKey: "follower_id"});
+    Connection.belongsTo(User, {as: "Follower", foreignKey: "follower_id"});
+    User.hasMany(Connection, {as: "Followed", foreignKey: "followee_id"});
+    Connection.belongsTo(User, {as: "Followee", foreignKey: "followee_id"});
+
+    Connection.User = User;
+
+    return Connection;
 }

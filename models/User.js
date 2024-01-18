@@ -9,13 +9,21 @@ module.exports = (sequelize, DataTypes)=>{
             type: DataTypes.STRING(16),
             allowNull: false
         },
-        password: {
-            type: DataTypes.STRING(64),
-            allowNull: false
+        id:{
+            type: DataTypes.STRING(16),
+            allowNull: false,
+            primaryKey: false
         },
         col_no: {
             type: DataTypes.STRING(8)
         },
+        isAdmin: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false
+        },
+        major: {
+            type: DataTypes.STRING(64)
+        }
     });
     return User;
 }
