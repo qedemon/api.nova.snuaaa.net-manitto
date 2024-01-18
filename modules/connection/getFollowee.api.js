@@ -21,7 +21,7 @@ function attachGetFollowee(app){
                         throw new Error("not registered.")
                     }
                     if(authorization.userInfo.isAdmin || (target_user_id===authorization.userInfo.user_id)){
-                        const {connections, error} = await getConnections(target_user_id);
+                        const {connections, error} = await getConnections(target_user_id, null, true);
                         if(error){
                             throw error;
                         }
