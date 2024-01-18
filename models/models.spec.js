@@ -85,6 +85,7 @@ test("connection", async ()=>{
             }
         }
     );
+    
     await Connection.destroy(
         {
             where: {
