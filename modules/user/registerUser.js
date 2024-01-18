@@ -1,12 +1,13 @@
 const {createSequelize, closeSequelize} = require("modules/sequelize");
 const getUser = require("./getUser");
-const defineUser = require("models/User");
+const defineMission = require("models/Mission");
 const Result = require("modules/Utility/Result");
 
 async function registerUser(user_info){
     const {sequelize} = await createSequelize();
     const DataTypes = sequelize.Sequelize.DataTypes;
-    const User = defineUser(sequelize, DataTypes);
+    const Mission = defineMission(sequelize, DataTypes);
+    const User = Mission.User;
     
     try{
         const {user} = await getUser({user_id: user_info.user_id});

@@ -10,5 +10,9 @@
     {
         "name": "connection",
         "route": "modules/connection"
+    },
+    {
+        "name": "mission",
+        "route": "modules/mission"
     }
 ]

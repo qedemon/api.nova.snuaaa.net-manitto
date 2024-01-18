@@ -1,11 +1,11 @@
-const connectionModule = require("./module");
 const middleware = require("./middleware");
+const missionModule = require("./module")
 
 module.exports = (
     async ()=>{
-        console.log("connecton module loaded.")
+        console.log("mission module loaded.");
         return {
-            module: connectionModule,
+            module: missionModule,
             middleware
         }
     }
