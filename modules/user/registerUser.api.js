@@ -12,7 +12,7 @@ function attachRegisterUser(app){
                 throw new Error("remote authorization failed.");
             }
             const userInfo = req.authorization.userInfo;
-            userInfo.mission_id = req.body.mission_id;
+            userInfo.mission_difficulty = req.body.mission_rank;
             const {user, error, result} = await registerUser(userInfo);
             if(result===Result.fail){
                 throw error;

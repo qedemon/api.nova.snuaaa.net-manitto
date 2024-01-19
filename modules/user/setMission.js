@@ -2,7 +2,7 @@ const {createSequelize, closeSequelize} = require("modules/sequelize");
 const defineMission = require("models/Mission");
 const {getMissionList} = require("modules/mission/module")
 
-async function setMission(user_id, mission_id){
+async function setMission(user_id, difficulty){
     const {sequelize} = await createSequelize();
     const DataTypes = sequelize.Sequelize.DataTypes;
     try{
@@ -13,18 +13,37 @@ async function setMission(user_id, mission_id){
         if(missions.length<=0){
             throw new Error("no missions");
         }
-        const targetMissionInfo = missions.find(({id})=>id===mission_id);
-        if(!targetMissionInfo){
-            throw new Error("invalid target mission");
+        const mission_with_difficulty = missions.filter(
+            (
+                (target)=>({difficulty})=>{
+                    return target===difficulty
+                }
+            )(difficulty)
+        ).map(
+            (item)=>{
+                const remain = item.maximum-item.no_user;
+                return {...item, remain};
+            }
+        ).sort(
+            (a, b)=>{
+                return b.remain-a.remain;
+            }
+        );
+        const remain = mission_with_difficulty.reduce((result, {remain})=>result+remain, 0);
+        if(mission_with_difficulty.length===0){
+            throw new Error("invalid difficulty");
         }
-        if(targetMissionInfo.no_user>=targetMissionInfo.maximum){
+        if(remain<=0){
             throw new Error("full mission");
         }
+        const targetMissionInfo = mission_with_difficulty[0];
+
+
         const Mission = defineMission(sequelize, DataTypes);
         const targetMission = await Mission.findOne(
             {
                 where: {
-                    id: mission_id
+                    id: targetMissionInfo.id
                 }
             }
         );

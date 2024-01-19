@@ -11,7 +11,7 @@ async function getMissionList(loadedSequelize = null){
             await Mission.findAll(
                 {
                     attributes: [
-                        "id", "title", "description", "maximum",
+                        "id", "title", "difficulty", "description", "maximum",
                         [sequelize.fn('COUNT', sequelize.col('User.user_id')), "n_users"]
                     ],
                     include: [
@@ -24,9 +24,9 @@ async function getMissionList(loadedSequelize = null){
                 }
             )
         ).map(
-            ({dataValues:{id, title, description, maximum, n_users}})=>{
+            ({dataValues:{id, title, difficulty, description, maximum, n_users}})=>{
                 return {
-                    id, title, description, maximum,
+                    id, title, difficulty, description, maximum,
                     n_users: Number(n_users)
                 }
             }
