@@ -18,7 +18,8 @@ function attachGetPolicies(app){
                 policies
             }
         )
-    })
+    });
+    return app;
 }
 
 module.exports = attachGetPolicies;

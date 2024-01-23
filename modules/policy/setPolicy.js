@@ -31,7 +31,7 @@ async function setPolicies(name, value, loadedSequelize = null){
             policy: (
                 ({name, value})=>{
                     return {
-                        name, value
+                        name, value:eval(value)
                     }
                 }
             )(policy)

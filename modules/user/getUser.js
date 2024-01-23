@@ -10,7 +10,7 @@ async function getUser(condition, loadedSequelize=null){
     const Schedule = Models.Schedule;
     const Mission = Models.Mission;
     try{
-        const user = await User.findOne(
+        const users = await User.findAll(
             {
                 include: [
                     {
@@ -36,6 +36,7 @@ async function getUser(condition, loadedSequelize=null){
                 where: condition,
             }
         )
+        const [user] = users;
         return {
             user:
                 (
@@ -56,7 +57,8 @@ async function getUser(condition, loadedSequelize=null){
                             Mission
                         }
                     }
-                )(user)
+                )(user),
+            users
         };
     }
     catch(error){
