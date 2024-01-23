@@ -52,15 +52,8 @@ async function getUser(condition, loadedSequelize=null){
                                     return {name, col_no, major, expired_at};
                                 }
                             ),
-                            schedule: {
-                                enter_at: Schedule?.enter_at,
-                                exit_at: Schedule?.exit_at
-                            },
-                            mission: {
-                                title: Mission.title,
-                                rank: Mission.difficulty,
-                                description: Mission.description
-                            }
+                            Schedule,
+                            Mission
                         }
                     }
                 )(user)
