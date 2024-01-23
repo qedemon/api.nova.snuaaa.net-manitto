@@ -1,6 +1,6 @@
 const {createSequelize, closeSequelize} = require("modules/sequelize");
-const defineMission = require("models/Mission");
-const {getMissionList} = require("modules/mission/module")
+const {getMissionList} = require("modules/mission/module");
+const defineModels = require("models");
 
 async function setMission(user_id, difficulty){
     const {sequelize} = await createSequelize();
@@ -39,7 +39,7 @@ async function setMission(user_id, difficulty){
         const targetMissionInfo = mission_with_difficulty[0];
 
 
-        const Mission = defineMission(sequelize, DataTypes);
+        const {Mission} = defineModels(sequelize, DataTypes);
         const targetMission = await Mission.findOne(
             {
                 where: {

@@ -1,5 +1,8 @@
 const {createSequelize, closeSequelize} = require("modules/sequelize");
-const defineConnection = require("models/Connection");
+const defineModels = require("models");
+const defineConnection = (sequelize, DataTypes)=>{
+    return defineModels(sequelize, DataTypes).Connection;
+}
 
 async function getConnections(follower_id=null, followee_id=null, include_expired=false, loadedSequelize=null){
     const sequelize = await(loadedSequelize?loadedSequelize: (await createSequelize()).sequelize);
@@ -44,7 +47,7 @@ async function getConnections(follower_id=null, followee_id=null, include_expire
     }
     finally{
         if(loadedSequelize===null){
-            //closeSequelize(sequelize);
+            await closeSequelize(sequelize);
         }
     }
 

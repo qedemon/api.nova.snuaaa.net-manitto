@@ -1,11 +1,13 @@
 const {createSequelize, closeSequelize} = require("modules/sequelize");
+const defineModels = require("./index");
 const defineConnection = require("./Connection");
 const defineMission = require("./Mission");
 
 test("connection", async ()=>{
     const {sequelize} = await createSequelize();
-    const Connection = defineConnection(sequelize, sequelize.Sequelize.DataTypes);
-    const User = Connection.User;
+    const {Connection, User} = defineModels(sequelize, sequelize.Sequelize.DataTypes);
+    await User.sync({alter: true});
+    await Connection.sync({alter: true});
 
     const userInfos = [
         {
@@ -100,9 +102,9 @@ test("connection", async ()=>{
 test("mission", async()=>{
     const {sequelize} = await createSequelize();
     const DataTypes = sequelize.Sequelize.DataTypes;
-    const Mission = defineMission(sequelize, DataTypes);
+    const {Mission, User} = defineModels(sequelize, DataTypes);
     await Mission.sync({alter: true});
-    await Mission.User.sync({alter: true});
+    await User.sync({alter: true});
     try{
         const missionInfo = [
             {

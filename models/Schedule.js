@@ -1,7 +1,4 @@
-const defineUser = require("./User");
-
 module.exports = (sequelize, DataTypes)=>{
-    const User = defineUser(sequelize, DataTypes);
     const Schedule = sequelize.define('Schedule', {
         enter_at:{
             type: DataTypes.DATE,
@@ -12,8 +9,8 @@ module.exports = (sequelize, DataTypes)=>{
             allowNull: true
         }
     });
-    User.hasOne(Schedule);
+    /*User.hasOne(Schedule);
     Schedule.belongsTo(User);
-    Schedule.User;
+    Schedule.User;*/
     return Schedule;
 }
