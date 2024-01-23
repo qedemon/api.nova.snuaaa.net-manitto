@@ -27,6 +27,7 @@ function attachRegisterUser(app){
             )
         }
         catch(error){
+            console.error(error);
             res.json(
                 {
                     result: Result.fail,

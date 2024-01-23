@@ -3,10 +3,11 @@ const middleware = express();
 
 const attachRegisterUser = require("./registerUser.api");
 const attachWhoAmI = require("./whoAmI.api");
-
+const attachDeleteUser = require("./deleteUser.api");
 
 attachRegisterUser(middleware);
 attachWhoAmI(middleware);
+attachDeleteUser(middleware);
 
 middleware.get("/", (req, res)=>{
     res.writeHead(200, {"Content-type": "text/plain"});

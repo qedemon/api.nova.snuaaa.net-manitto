@@ -2,8 +2,8 @@ const {createSequelize, closeSequelize} = require("modules/sequelize");
 const {getMissionList} = require("modules/mission/module");
 const defineModels = require("models");
 
-async function setMission(user_id, difficulty){
-    const {sequelize} = await createSequelize();
+async function setMission(user_id, difficulty, loadedSequelize=null){
+    const {sequelize} = await (loadedSequelize || createSequelize());
     const DataTypes = sequelize.Sequelize.DataTypes;
     try{
         const {error, missions} = await getMissionList(sequelize);
@@ -63,7 +63,8 @@ async function setMission(user_id, difficulty){
         }
     }
     finally{
-        await closeSequelize(sequelize);
+        if(loadedSequelize===null)
+            await closeSequelize(sequelize);
     }
 }
 
