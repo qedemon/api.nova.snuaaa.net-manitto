@@ -13,6 +13,8 @@ function attachRegisterUser(app){
             }
             const userInfo = req.authorization.userInfo;
             userInfo.mission_difficulty = req.body.mission_rank;
+            userInfo.enter_at = Date.now();
+            userInfo.exit_at = req.body.exit_at;
             const {user, error, result} = await registerUser(userInfo);
             if(result===Result.fail){
                 throw error;

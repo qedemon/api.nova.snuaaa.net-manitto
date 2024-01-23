@@ -8,6 +8,7 @@ async function getUser(condition, loadedSequelize=null){
     const User = Models.User;
     const Connection = Models.Connection;
     const Schedule = Models.Schedule;
+    const Mission = Models.Mission;
     try{
         const user = await User.findOne(
             {
@@ -24,6 +25,12 @@ async function getUser(condition, loadedSequelize=null){
                     },
                     {
                         model: Schedule
+                    },
+                    {
+                        model: Mission,
+                        attributes: [
+                            "title", "description", "difficulty"
+                        ]
                     }
                 ],
                 where: condition,
@@ -32,7 +39,7 @@ async function getUser(condition, loadedSequelize=null){
         return {
             user:
                 (
-                    ({user_id, name, id, col_no, isAdmin, major, Following, Schedule})=>{
+                    ({user_id, name, id, col_no, isAdmin, major, Following, Schedule, Mission})=>{
                         return {
                             user_id,
                             name,
@@ -48,6 +55,11 @@ async function getUser(condition, loadedSequelize=null){
                             schedule: {
                                 enter_at: Schedule?.enter_at,
                                 exit_at: Schedule?.exit_at
+                            },
+                            mission: {
+                                title: Mission.title,
+                                rank: Mission.difficulty,
+                                description: Mission.description
                             }
                         }
                     }

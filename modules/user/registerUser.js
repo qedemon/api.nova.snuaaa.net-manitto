@@ -1,5 +1,5 @@
 const {createSequelize, closeSequelize} = require("modules/sequelize");
-const defineUser = require("models/User");
+const defineModel = require("models");
 const getUser = require("./getUser");
 const Result = require("modules/Utility/Result");
 const setMission = require("./setMission");
@@ -12,7 +12,8 @@ async function registerUser(user_info){
         if(user){
             throw new Error("alread exists");
         }
-        const User = defineUser(sequelize, sequelize.Sequelize.DataTypes);
+        const Model = defineModel(sequelize, sequelize.Sequelize.DataTypes);
+        const User = Model.User;
         const regiteredUser = await User.create(
             {
                 user_id: user_info.user_id,
