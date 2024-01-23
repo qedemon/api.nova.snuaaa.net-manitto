@@ -1,7 +1,7 @@
 const authorize = require("modules/authorize/middleware");
 const express = require("express");
 const Result = require("modules/Utility/Result");
-const {registerUser} = require("./module");
+const {registerUser, setMission} = require("./module");
 
 function attachRegisterUser(app){
     app.use("/registerUser", authorize);
@@ -12,6 +12,9 @@ function attachRegisterUser(app){
                 throw new Error("remote authorization failed.");
             }
             const userInfo = req.authorization.userInfo;
+            userInfo.mission_difficulty = req.body.mission_rank;
+            userInfo.enter_at = Date.now();
+            userInfo.exit_at = req.body.exit_at;
             const {user, error, result} = await registerUser(userInfo);
             if(result===Result.fail){
                 throw error;

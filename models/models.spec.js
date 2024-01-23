@@ -1,11 +1,13 @@
 const {createSequelize, closeSequelize} = require("modules/sequelize");
-const defineUser = require("./User");
+const defineModels = require("./index");
 const defineConnection = require("./Connection");
+const defineMission = require("./Mission");
 
 test("connection", async ()=>{
     const {sequelize} = await createSequelize();
-    const Connection = defineConnection(sequelize, sequelize.Sequelize.DataTypes);
-    const User = Connection.User;
+    const {Connection, User} = defineModels(sequelize, sequelize.Sequelize.DataTypes);
+    await User.sync({alter: true});
+    await Connection.sync({alter: true});
 
     const userInfos = [
         {
@@ -96,3 +98,58 @@ test("connection", async ()=>{
     await closeSequelize(sequelize);
 
 })
+
+test("mission", async()=>{
+    const {sequelize} = await createSequelize();
+    const DataTypes = sequelize.Sequelize.DataTypes;
+    const {Mission, User} = defineModels(sequelize, DataTypes);
+    await Mission.sync({alter: true});
+    await User.sync({alter: true});
+    try{
+        const missionInfo = [
+            {
+                title: "테스트 미션 첫번째",
+                description: "알아서 해라",
+                maximum: 10,
+                difficulty: 1
+            },
+            {
+                title: "테스트 미션 두번째",
+                description: "한번 더 알아서 해라",
+                maximum: 20,
+                difficulty: 2
+            },
+            {
+                title: "테스트 미션 세번째",
+                description: "다시 알아서 해라",
+                maximum: 10,
+                difficulty: 3
+            }
+        ];
+    
+        const missions = await missionInfo.reduce(
+            async (last, missionInfo)=>{
+                const result = await last;
+                const [mission, created] = await Mission.findOrCreate(
+                    {
+                        where: missionInfo
+                    }
+                )
+                return [...result, ...(mission?[mission]:[])];
+            },
+            Promise.resolve([])
+        )
+        expect(missions.length).toBe(missionInfo.length);
+    }
+    catch(error){
+        console.error(error);
+        throw error;
+    }
+    finally{
+        await closeSequelize(sequelize);
+    }
+});
+
+test("policy", async()=>{
+
+});
