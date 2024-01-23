@@ -14,5 +14,9 @@
     {
         "name": "mission",
         "route": "modules/mission"
+    },
+    {
+        "name": "policy",
+        "route": "modules/policy"
     }
 ]
