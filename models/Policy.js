@@ -1,6 +1,6 @@
 function Policy(sequelize, DataTypes){
     const Policy = sequelize.define("Policy", {
-        variable: {
+        name: {
             type: DataTypes.STRING(64)
         },
         value: {

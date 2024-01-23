@@ -16,7 +16,7 @@
   "scripts": {
     "start": "NODE_PATH=. node server.js",
     "nodemon": "NODE_PATH=. nodemon server.js",
-    "sync": "NODE_PATH=. node sync.js",
+    "install": "NODE_PATH=. node install.js",
     "test": "NODE_PATH=. jest"
   },
   "keywords": [],
