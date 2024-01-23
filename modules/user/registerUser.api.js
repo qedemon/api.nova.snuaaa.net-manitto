@@ -15,8 +15,8 @@ function attachRegisterUser(app){
             userInfo.mission_difficulty = req.body.mission_rank;
             userInfo.enter_at = Date.now();
             userInfo.exit_at = req.body.exit_at;
-            const {user, error, result} = await registerUser(userInfo);
-            if(result===Result.fail){
+            const {user, error} = await registerUser(userInfo);
+            if(error){
                 throw error;
             }
             res.json(
@@ -27,7 +27,6 @@ function attachRegisterUser(app){
             )
         }
         catch(error){
-            console.error(error);
             res.json(
                 {
                     result: Result.fail,

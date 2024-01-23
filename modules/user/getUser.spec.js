@@ -10,6 +10,5 @@ test("getUser", async ()=>{
         console.error(error);
         throw error;
     }
-    console.log(user);
     expect(user.id).toBe(userInfo.id);
 });
