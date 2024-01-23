@@ -25,9 +25,8 @@ async function registerUser(user_info){
             }
         );
         const mission_difficulty = user_info.mission_difficulty;
-        await setMission(regiteredUser.user_id, mission_difficulty, {sequelize});
+        await setMission(regiteredUser.user_id, mission_difficulty, sequelize);
 
-        console.log(user_info);
         const schedule = await Schedule.create(
             {
                 enter_at: user_info.enter_at,

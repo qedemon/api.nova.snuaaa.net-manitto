@@ -5,7 +5,7 @@ const defineConnection = (sequelize, DataTypes)=>{
 }
 
 async function getConnections(follower_id=null, followee_id=null, include_expired=false, loadedSequelize=null){
-    const sequelize = await(loadedSequelize?loadedSequelize: (await createSequelize()).sequelize);
+    const sequelize = (loadedSequelize || (await createSequelize()).sequelize);
     const DataTypes = sequelize.Sequelize.DataTypes;
 
     const Connection = defineConnection(sequelize, DataTypes);

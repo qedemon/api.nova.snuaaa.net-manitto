@@ -2,7 +2,7 @@ const {createSequelize, closeSequelize} = require("modules/sequelize");
 const defineModels = require("models");
 
 async function deleteUser(user_id, loadedSequelize=null){
-    const {sequelize} = await (loadedSequelize || createSequelize());
+    const sequelize = (loadedSequelize || (await createSequelize()).sequelize);
     try{
         const {User} = defineModels(sequelize, sequelize.Sequelize.DataTypes);
         const destroyed = await User.destroy(

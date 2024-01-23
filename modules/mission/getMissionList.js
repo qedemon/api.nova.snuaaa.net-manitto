@@ -2,7 +2,7 @@ const defineModels = require("models");
 const {createSequelize, closeSequelize} = require("modules/sequelize");
 
 async function getMissionList(loadedSequelize = null){
-    const sequelize = await(loadedSequelize?loadedSequelize:(await createSequelize()).sequelize);
+    const sequelize = (loadedSequelize || (await createSequelize()).sequelize);
     try{
         const DataTypes = sequelize.Sequelize.DataTypes;
         const {Mission} = defineModels(sequelize, DataTypes);
