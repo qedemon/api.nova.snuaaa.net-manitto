@@ -56,9 +56,9 @@ async function getAllUser(loadedSequelize=null){
                 user_id, name, col_no, major
             }
         };
-        const filterMission = ({title, description, difficulty})=>{
+        const filterMission = ({mission_id, title, description, difficulty})=>{
             return {
-                title, description, difficulty
+                mission_id, title, description, difficulty
             };
         };
         const filterConnection = ({connection, user})=>{

@@ -5,11 +5,13 @@ const attachRegisterUser = require("./registerUser.api");
 const attachWhoAmI = require("./whoAmI.api");
 const attachGetAllUser = require("./getAllUser.api")
 const attachDeleteUser = require("./deleteUser.api");
+const attachSetMission = require("./setMission.api");
 
 attachRegisterUser(middleware);
 attachWhoAmI(middleware);
 attachGetAllUser(middleware);
 attachDeleteUser(middleware);
+attachSetMission(middleware);
 
 middleware.get("/", (req, res)=>{
     res.writeHead(200, {"Content-type": "text/plain"});

@@ -28,7 +28,7 @@ async function getUser(condition, loadedSequelize=null){
                     {
                         model: Mission,
                         attributes: [
-                            "title", "description", "difficulty"
+                            ["id", "mission_id"], "title", "description", "difficulty"
                         ]
                     }
                 ],
