@@ -91,7 +91,11 @@ async function getAllUser(loadedSequelize=null){
                             return connections?connections.map((connection)=>{return {connection, user}}).map(filterConnection):[];
                         }
                     );
-                    const schedule = filterSchedule(user.Schedule);
+                    const schedule = (
+                        (schedule)=>{
+                            return schedule?filterSchedule(schedule):{};
+                        }
+                    )(user.Schedule);
                     return {
                         ...filterUser(user),
                         mission,
