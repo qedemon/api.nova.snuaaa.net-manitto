@@ -3,7 +3,6 @@ const defineModels = require("models");
 
 async function getUser(condition, loadedSequelize=null){
     const sequelize = (loadedSequelize || (await createSequelize()).sequelize);
-    const {Sequelize:{Op}} = sequelize;
     const Models = defineModels(sequelize, sequelize.Sequelize.DataTypes);
     const User = Models.User;
     const Connection = Models.Connection;
