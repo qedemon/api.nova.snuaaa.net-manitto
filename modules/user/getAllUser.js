@@ -8,6 +8,7 @@ async function getAllUser(loadedSequelize=null){
     const User = Models.User;
     const Connection = Models.Connection;
     const Mission = Models.Mission;
+    const Schedule = Models.Schedule;
     try{ 
         const users = await User.findAll(
             {
@@ -24,6 +25,10 @@ async function getAllUser(loadedSequelize=null){
                     {
                         model: Mission,
                         attributes: ["title", "description", "difficulty"]
+                    },
+                    {
+                        model: Schedule,
+                        attributes: ["enter_at", "exit_at"]
                     },
                     {
                         model: Connection,
@@ -67,6 +72,12 @@ async function getAllUser(loadedSequelize=null){
                 expired_at: connection.expired_at
             }
         };
+        const filterSchedule = ({enter_at, exit_at})=>{
+            return {
+                enter_at,
+                exit_at
+            }
+        };
         return {
             users: users.map(
                 (user)=>{
@@ -79,12 +90,14 @@ async function getAllUser(loadedSequelize=null){
                         ({connections, user})=>{
                             return connections?connections.map((connection)=>{return {connection, user}}).map(filterConnection):[];
                         }
-                    )
+                    );
+                    const schedule = filterSchedule(user.Schedule);
                     return {
                         ...filterUser(user),
                         mission,
                         following,
-                        followed
+                        followed,
+                        schedule
                     }
                 }
             )
