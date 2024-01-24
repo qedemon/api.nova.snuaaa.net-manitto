@@ -1,38 +1,41 @@
 const {createSequelize, closeSequelize} = require("modules/sequelize");
-const defineUser = require("models/User");
+const defineModels = require("models");
 const connect = require("./connect");
 const disconnect = require("./disconnect");
 const Result = require("modules/Utility/Result");
 
 test("connect", async ()=>{
     const {sequelize} = await createSequelize();
-    const User = defineUser(sequelize, sequelize.Sequelize.DataTypes);
+    const {User, Mission} = defineModels(sequelize, sequelize.Sequelize.DataTypes);
     const userInfos = [
         {
             name: "testA",
             id: "testA",
-            col_no: "23"
+            col_no: "23",
+            major: "목탁디자인",
         },
         {
             name: "testB",
             id: "testB",
-            col_no: "23"
+            col_no: "23",
+            major: "십자가디자인",
         },
         
         {
             name: "testC",
             id: "testC",
-            col_no: "23"
+            col_no: "23",
+            major: "제삿상디자인",
         }
     ];
 
     const users = await userInfos.reduce(
         async (last, userInfo)=>{
             const result = await last;
-            const {name, id, col_no} = userInfo;
+            const {name, id, col_no, major} = userInfo;
             const users = await User.findOrCreate({
                 where: {
-                    name, id, col_no
+                    name, id, col_no, major
                 }
             });
             return [...result, users[0]];
