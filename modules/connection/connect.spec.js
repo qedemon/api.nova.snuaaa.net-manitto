@@ -54,7 +54,7 @@ test("connect", async ()=>{
         const results = await connect_info.reduce(
             async (last, {follower, followee})=>{
                 const results = await last;
-                return await connect(follower.user_id, followee.user_id, sequelize);
+                return [...results, await connect(follower.user_id, followee.user_id, sequelize)];
             },
             Promise.resolve([])
         )
