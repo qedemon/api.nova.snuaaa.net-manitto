@@ -8,6 +8,9 @@ function attachSetSchedule(app){
     app.use("/setSchedule", express.json());
     app.use("/setSchedule", async (req, res)=>{
         try{
+            if(!req.authorization?.userInfo.isAdmin){
+                throw new Error("unauthorized");
+            }
             const {user_id, schedule} = req.body;
             const {user, error} = await setSchedule(user_id, schedule);
             if(error){
