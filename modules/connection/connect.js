@@ -4,7 +4,7 @@ const disconnect = require("./disconnect");
 const Result = require("modules/Utility/Result");
 
 async function connect(follower_id, followee_id, loadedSequelize=null){
-    const sequelize = await(loadedSequelize?loadedSequelize: (await createSequelize()).sequelize);
+    const sequelize = loadedSequelize || (await createSequelize()).sequelize;
 
     try{
         const {connections, error, Connection} = await getConnections(follower_id, followee_id, false, sequelize);
@@ -53,11 +53,13 @@ async function connect(follower_id, followee_id, loadedSequelize=null){
         }
     }
     catch(error){
-        return {error};
+        return {
+            error
+        };
     }
     finally{
         if(loadedSequelize === null){
-            //closeSequelize(sequelize);
+            closeSequelize(sequelize);
         }
     }
 
