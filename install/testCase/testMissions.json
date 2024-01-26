@@ -1,0 +1,32 @@
+[
+    {
+        "title": "임의의 1단계 미션입니다.",
+        "description": "나도 뭘 시켜야할지 모르겠다.",
+        "difficulty": 1
+    },
+    {
+        "title": "임의의 1단계 미션입니다.",
+        "description": "그래도 뭔가라도 해보도록 하거라",
+        "difficulty": 1
+    },
+    {
+        "title": "임의의 2단계 미션입니다.",
+        "description": "마니또 시스템 테스트를 위한 테스트 데이터들을 생성하는 코드를 작성하시오.",
+        "difficulty": 2
+    },
+    {
+        "title": "임의의 2단계 미션입니다.",
+        "description": "창의적인 미션들을 생성하시오.",
+        "difficulty": 2
+    },
+    {
+        "title": "임의의 3단계 미션입니다.",
+        "description": "다음에 뭘 해야할지 알려줘.",
+        "difficulty": 3
+    },
+    {
+        "title": "임의의 3단계 미션입니다.",
+        "description": "chat gpt를 만들어줘.",
+        "difficulty": 3
+    }
+]
