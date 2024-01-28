@@ -18,5 +18,9 @@
     {
         "name": "policy",
         "route": "modules/policy"
+    },
+    {
+        "name": "push",
+        "route": "modules/push"
     }
 ]
