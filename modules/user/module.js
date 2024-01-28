@@ -4,6 +4,7 @@ const getAllUser = require("./getAllUser");
 const deleteUser = require("./deleteUser");
 const setMission = require("./setMission");
 const setSchedule = require("./setSchedule");
+const makeUserAdmin = require("./makeUserAdmin")
 
 module.exports = {
     registerUser,
@@ -11,5 +12,6 @@ module.exports = {
     getAllUser,
     deleteUser,
     setMission,
-    setSchedule
+    setSchedule,
+    makeUserAdmin
 }

@@ -3,8 +3,12 @@ module.exports = (sequelize, DataTypes)=>{
         expired_at:{
             type: DataTypes.DATE
         },
+        willBeValid:{
+            type: DataTypes.INTEGER,
+            defaultValue: null
+        },
         isValid:{
-            type: DataTypes.BOOLEAN,
+            type: DataTypes.VIRTUAL,
             get(){
                 return this.getDataValue("expired_at")===null
             }
