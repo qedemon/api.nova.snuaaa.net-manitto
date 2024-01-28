@@ -7,6 +7,7 @@ const attachGetAllUser = require("./getAllUser.api")
 const attachDeleteUser = require("./deleteUser.api");
 const attachSetMission = require("./setMission.api");
 const attachSetSchedule = require("./setSchedule.api");
+const attachMakeMeAdmin = require("./makeMeAdmin.api");
 
 attachRegisterUser(middleware);
 attachWhoAmI(middleware);
@@ -14,6 +15,7 @@ attachGetAllUser(middleware);
 attachDeleteUser(middleware);
 attachSetMission(middleware);
 attachSetSchedule(middleware);
+attachMakeMeAdmin(middleware);
 
 middleware.get("/", (req, res)=>{
     res.writeHead(200, {"Content-type": "text/plain"});
