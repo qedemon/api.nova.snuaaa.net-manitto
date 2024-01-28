@@ -3,6 +3,7 @@ const defineSchedule = require("./Schedule");
 const defineConnection = require("./Connection");
 const defineMission = require("./Mission");
 const definePolicy = require("./Policy");
+const definePush = require("./Push");
 
 function defineModels(sequelize, DataTypes){
     const User = defineUser(sequelize, DataTypes);
@@ -10,6 +11,7 @@ function defineModels(sequelize, DataTypes){
     const Connection = defineConnection(sequelize, DataTypes);
     const Mission = defineMission(sequelize, DataTypes);
     const Policy = definePolicy(sequelize, DataTypes);
+    const Push = definePush(sequelize, DataTypes);
 
     if(!User.Schedule){
         User.hasOne(Schedule);
@@ -40,8 +42,17 @@ function defineModels(sequelize, DataTypes){
         User.Mission = Mission;
     }
 
+    if(!User.Push){
+        User.hasOne(Push);
+        User.Push = Push;
+    }
+    if(!Push.User){
+        Push.belongsTo(User);
+        Push.User = User;
+    }
+
     return {
-        User, Schedule, Connection, Mission, Policy
+        User, Schedule, Connection, Mission, Policy, Push
     };
 }
 

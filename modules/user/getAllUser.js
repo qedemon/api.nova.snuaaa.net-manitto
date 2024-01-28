@@ -69,7 +69,8 @@ async function getAllUser(loadedSequelize=null){
         const filterConnection = ({connection, user})=>{
             return {
                 user_info: filterUser(connection[user]),
-                expired_at: connection.expired_at
+                expired_at: connection.expired_at,
+                isValid: connection.isValid
             }
         };
         const filterSchedule = ({enter_at, exit_at})=>{

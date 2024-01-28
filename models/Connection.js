@@ -2,6 +2,12 @@ module.exports = (sequelize, DataTypes)=>{
     const Connection = sequelize.define("Connection", {
         expired_at:{
             type: DataTypes.DATE
+        },
+        isValid:{
+            type: DataTypes.BOOLEAN,
+            get(){
+                return this.getDataValue("expired_at")===null
+            }
         }
     });
     
