@@ -16,10 +16,12 @@ async function getConnectionDocument(day, loadedSequelize){
                 include: [
                     {
                         model: Connection,
+                        attributes: ["expired_at", "follower_id", "followee_id"],
                         as: "Following"
                     },
                     {
                         model: Connection,
+                        attributes: ["expired_at", "follower_id", "followee_id"],
                         as: "Followed"
                     },
                     Schedule
@@ -32,8 +34,8 @@ async function getConnectionDocument(day, loadedSequelize){
                 const isDisconnected =  [Following, Followed].every(
                     (connections)=>{
                         return connections.filter(
-                            ({expired_at})=>{
-                                return expired_at===null;
+                            ({isValid})=>{
+                                return isValid;
                             }
                         ).length === 0;
                     }
@@ -147,6 +149,7 @@ async function getConnectionDocument(day, loadedSequelize){
         }
     }
     catch(error){
+        console.error(error);
         return {
             error
         }
