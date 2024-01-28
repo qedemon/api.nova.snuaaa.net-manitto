@@ -6,8 +6,8 @@ const defineModels = require("models");
         console.log("install start");
         const {sequelize} = await createSequelize();
         const Sequelize = sequelize.Sequelize;
-        const {User, Connection, Schedule, Mission, Policy} = defineModels(sequelize, Sequelize.DataTypes);
-        await [User, Connection, Schedule, Mission].reduce(
+        const {User, Connection, Schedule, Mission, Policy, Push} = defineModels(sequelize, Sequelize.DataTypes);
+        await [User, Connection, Schedule, Mission, Push].reduce(
             async (last, model)=>{
                 await last;
                 console.log(model);

@@ -4,7 +4,7 @@ const Result = require("modules/Utility/Result");
 function attachGetPolicies(app){
     app.use("/getPolicies", midLayer());
     app.get("/getPolicies", async (req, res)=>{
-        const {policies, error} = req.policies
+        const {policies, error} = req.policy
         if(error){
             res.json(
                 {
