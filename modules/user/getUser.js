@@ -48,8 +48,8 @@ async function getUser(condition, loadedSequelize=null){
                             major,
                             isAdmin,
                             following: Following.map(
-                                ({Followee: {name, col_no, major}, expired_at})=>{
-                                    return {name, col_no, major, expired_at};
+                                ({Followee: {name, col_no, major}, expired_at, isValid})=>{
+                                    return {name, col_no, major, expired_at, isValid};
                                 }
                             ),
                             Schedule,
