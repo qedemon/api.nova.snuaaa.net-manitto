@@ -1,6 +1,6 @@
 const {createSequelize, closeSequelize} = require("modules/sequelize");
 const defineModels = require("models");
-
+const {convertDateToUnit} = require("modules/Utility/convertDate");
 
 async function getAllUser(loadedSequelize=null){
     const sequelize = (loadedSequelize || (await createSequelize()).sequelize);
@@ -66,9 +66,9 @@ async function getAllUser(loadedSequelize=null){
                 mission_id, title, description, difficulty
             };
         };
-        const filterConnection = ({connection, user})=>{
+        const filterConnection = ({connection, userKey})=>{
             return {
-                user_info: filterUser(connection[user]),
+                user_info: filterUser(connection[userKey]),
                 expired_at: connection.expired_at,
                 isValid: connection.isValid
             }
@@ -87,9 +87,54 @@ async function getAllUser(loadedSequelize=null){
                             return mission?filterMission(mission):{};
                         }
                     )(user.Mission);
-                    const [following, followed] = [{connections: user.Following, user: "Followee"}, {connections: user.Followed, user: "Follower"}].map(
-                        ({connections, user})=>{
-                            return connections?connections.map((connection)=>{return {connection, user}}).map(filterConnection):[];
+                    const [following, followed] = [{connections: user.Following, userKey: "Followee"}, {connections: user.Followed, userKey: "Follower"}].map(
+                        ({connections, userKey})=>{
+                            return connections?
+                                connections
+                                .sort(
+                                    (a, b)=>{
+                                        if(a.expired_at === null){
+                                            return -1;
+                                        }
+                                        if(b.expired_at === null){
+                                            return 1;
+                                        }
+                                        if(a.expired_at<b.expired_at){
+                                            return -1;
+                                        }
+                                        if(a.expired_at>b.expired_at){
+                                            return 1;
+                                        }
+                                        return 0;
+                                    }
+                                )
+                                .map((connection)=>{return {connection, userKey}})
+                                .map(filterConnection)
+                                .reduce(
+                                    ({lastStart, connections}, connection)=>{
+                                        return {
+                                            lastStart: connection.expired_at,
+                                            connections: [
+                                                ...connections,
+                                                {
+                                                    ...connection,
+                                                    start_at: lastStart
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    {lastStart: user.Schedule.enter_at, connections:[]}
+                                ).connections
+                                .map(
+                                    (connection)=>{
+                                        return {
+                                            ...connection,
+                                            start: convertDateToUnit(new Date(connection.start_at)),
+                                            end: connection.expired_at?convertDateToUnit(new Date(connection.exit_at)):null
+                                        }
+                                    }
+                                )
+                                :[];
                         }
                     );
                     const schedule = (
