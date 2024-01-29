@@ -1,36 +1,54 @@
 const {createSequelize, closeSequelize} = require("modules/sequelize");
-const getConnections = require("./getConnections");
-const Result = require("modules/Utility/Result");
+const defineModels = require("models");
+const getNow = require("modules/Utility/getNow");
 
-async function disconnect(follower_id, followee_id, loadedSequelize=null){
+async function disconnect(follower_id, followee_id, loadedSequelize=null, options={}){
     const sequelize = await(loadedSequelize?loadedSequelize: (await createSequelize()).sequelize);
 
     try{
-        const {connections, error, Connection} = await getConnections(follower_id, followee_id, true, sequelize);
-        if(error)
-            throw error;
-        if(!(connections?.length)){
+        const {User, Connection} = defineModels(sequelize, sequelize.Sequelize.DataTypes);
+        const connection = (
+            await Connection.findAll(
+                {
+                    where: {
+                        follower_id,
+                        followee_id
+                    },
+                    include: [
+                        {
+                            model: User,
+                            as: "Follower"
+                        },
+                        {
+                            model: User,
+                            as: "Followee"
+                        }
+                    ]
+                }
+            )
+        ).find(
+            (options.willBeValid===undefined || options.willBeValid===null)?
+            ({isValid})=>isValid
+            :
+            ({willBeValid})=>willBeValid===options.willBeValid
+        );
+        if(!connection)
             return {
-                result: Result.fail,
-                message: "never connected"
-            }  
+                disconnected: []
+            }
+        if((options.willBeValid===undefined || options.willBeValid===null)){
+            connection.expired_at=getNow();
+            await connection.save();
+        }
+        else{
+            await connection.destroy();
+        }
+        return {
+            disconnected: [
+                {follower_id, followee_id, willBeValid: options.willBeValid}
+            ]
         }
         
-        const valid_connections = connections.filter(({expired_at})=>(expired_at===null));
-        const disconnected = await Connection.update(
-            {
-                expired_at: sequelize.Sequelize.fn("NOW"),
-            },
-            {
-                where: {
-                    id: valid_connections.map(({id})=>id)
-                }
-            }
-        )
-        return {
-            result: Result.success,
-            disconnected: disconnected||[]
-        }
     }
     catch(error){
         return {error};
