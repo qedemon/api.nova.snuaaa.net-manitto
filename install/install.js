@@ -11,7 +11,7 @@ const defineModels = require("models");
             async (last, model)=>{
                 await last;
                 console.log(model);
-                return await model.sync({alter: true});
+                return await model.sync({alter: true, force: true});
             },
             Promise.resolve()
         );

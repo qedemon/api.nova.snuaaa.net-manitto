@@ -33,22 +33,18 @@ async function getAllUser(loadedSequelize=null){
                     {
                         model: Connection,
                         as: "Following",
-                        attributes: ["expired_at"],
                         include: {
                             model: User,
                             as: "Followee",
-                            attributes: ["user_id", "name", "col_no", "major"],
                             include: Mission
                         }
                     },
                     {
                         model: Connection,
                         as: "Followed",
-                        attributes: ["expired_at"],
                         include: {
                             model: User,
                             as: "Follower",
-                            attributes: ["user_id", "name", "col_no", "major"],
                             include: Mission
                         }
                     },
@@ -130,7 +126,7 @@ async function getAllUser(loadedSequelize=null){
                                         return {
                                             ...connection,
                                             start: convertDateToUnit(new Date(connection.start_at)),
-                                            end: connection.expired_at?convertDateToUnit(new Date(connection.exit_at)):null
+                                            end: connection.expired_at?convertDateToUnit(new Date(connection.expired_at)):null
                                         }
                                     }
                                 )

@@ -1,54 +1,91 @@
 const {createSequelize, closeSequelize} = require("modules/sequelize");
-const getConnections = require("./getConnections");
+const defineModels = require("models");
 const disconnect = require("./disconnect");
-const Result = require("modules/Utility/Result");
 
-async function connect(follower_id, followee_id, loadedSequelize=null){
+async function connect(follower_id, followee_id, loadedSequelize=null, options={}){
     const sequelize = loadedSequelize || (await createSequelize()).sequelize;
+    const Sequelize = sequelize.Sequelize;
 
     try{
-        const {connections, error, Connection} = await getConnections(follower_id, followee_id, false, sequelize);
-        if(error)
-            throw error;
-        if(connections?.length>0){
+        const {User, Connection} = defineModels(sequelize, Sequelize.DataTypes);
+        const connection = ((flag)=>(flag===null || flag===undefined))(options.willBeValid)?
+            (
+                await Connection.findAll(
+                    {
+                        where:{
+                            follower_id,
+                        },
+                        include:[
+                            {
+                                model: User,
+                                as: "Follower"
+                            },
+                            {
+                                model: User,
+                                as: "Followee"
+                            }
+                        ]
+                    }
+                )
+            ).find(({isValid})=>isValid):
+            (
+                await Connection.findOne(
+                    {
+                        where:{
+                            follower_id,
+                            willBeValid: options.willBeValid
+                        },
+                        include:[
+                            {
+                                model: User,
+                                as: "Follower"
+                            },
+                            {
+                                model: User,
+                                as: "Followee"
+                            }
+                        ]
+                    }
+                )
+            );
+        if(connection?.Followee?.user_id===followee_id){
             return {
-                result: Result.fail,
-                connected: connections[0],
-                message: "already connected"
-            }  
+                connected: [],
+                disconnected: []
+            }
         }
-        const User = Connection.User;
         const follower = await User.findOne(
             {
                 where: {
                     user_id: follower_id
                 }
             }
-        );
+        )
         if(!follower){
-            throw new Error("no follower")
+            throw (`invalid follower ${follower_id}`);
         }
         const followee = await User.findOne(
             {
-                where:{
+                where: {
                     user_id: followee_id
                 }
             }
-        )
+        );
         if(!followee){
-            throw new Error("no followee")
+            throw (`invalid followee ${followee_id}`);
         }
-        
-        const disconnected = [
-            ...((await disconnect(follower_id, null, sequelize)).disconnected)||[],
-            ...((await disconnect(null, followee_id, sequelize)).disconnected)||[]
-        ];
-
-        const connection = await follower.createFollowing();
-        await connection.setFollowee(followee);
-
+        const {disconnected, error} = connection?(await disconnect(connection.follower_id, connection.followee_id)):{disconnected:[]};
+        if(error){
+            throw error;
+        }
+        const newConnection = await follower.createFollowing(
+            {
+                willBeValid: options.willBeValid??null
+            }
+        );
+        await newConnection.setFollowee(followee);
         return {
-            connected: connection,
+            connected: [{follower_id, followee_id, willBeValid: options.willBeValid}],
             disconnected
         }
     }

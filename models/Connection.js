@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes)=>{
         isValid:{
             type: DataTypes.VIRTUAL,
             get(){
-                return this.getDataValue("expired_at")===null
+                return (this.getDataValue("expired_at")===null) && (this.getDataValue("willBeValid")===null)
             }
         }
     });

@@ -11,7 +11,7 @@ test("connect", async ()=>{
         const user = await User.findOne(
             {
                 where: {
-                    user_id: 2264
+                    user_id: 2565
                 },
                 include: [
                     {
@@ -24,9 +24,13 @@ test("connect", async ()=>{
                 ]
             }
         );
-        const prevFollowee = user.Following[0].followee_id;
-        await disconnect(2264, prevFollowee, sequelize);
-        await connect(2264, prevFollowee, sequelize);
+        //const prevFollowee = user.Following[0].followee_id;
+        //await disconnect(2264, prevFollowee, sequelize);
+        const {connected, disconnected, error} = await disconnect(2565, 3097, sequelize);
+        console.log(connected, disconnected, error);
+        if(error){
+            throw error;
+        }
     }
     catch(error){
         console.error(error);
