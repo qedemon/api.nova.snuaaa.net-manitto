@@ -1,8 +1,9 @@
 const {createSequelize, closeSequelize} = require("modules/sequelize");
 const defineModel = require("models");
 const {convertDateToUnit, convertUnitToDate} = require("modules/Utility/convertDate");
+const getNow = require("modules/Utility/getNow");
 
-async function getConnectionDocument(day, loadedSequelize){
+async function getConnectionDocument(day, loadedSequelize, today=convertDateToUnit(getNow()).major){
     const sequelize = loadedSequelize || (await createSequelize()).sequelize;
     const Sequelize = sequelize.Sequelize;
     const {DataTypes, Op} = Sequelize;
@@ -16,12 +17,10 @@ async function getConnectionDocument(day, loadedSequelize){
                 include: [
                     {
                         model: Connection,
-                        attributes: ["expired_at", "follower_id", "followee_id"],
                         as: "Following"
                     },
                     {
                         model: Connection,
-                        attributes: ["expired_at", "follower_id", "followee_id"],
                         as: "Followed"
                     },
                     Schedule
@@ -34,8 +33,10 @@ async function getConnectionDocument(day, loadedSequelize){
                 const isDisconnected =  [Following, Followed].every(
                     (connections)=>{
                         return connections.filter(
-                            ({isValid})=>{
-                                return isValid;
+                            (connectionInfo)=>{
+                                const connection = Connection.build(connectionInfo);
+                                const {isValid, willBeValid} = connection;
+                                return !isValid && (willBeValid!==day);
                             }
                         ).length === 0;
                     }
