@@ -27,29 +27,6 @@ async function getConnectionDocument(day, loadedSequelize, today=convertDateToUn
                 ]
             }
         ))
-        .map(
-            (user)=>{
-                user.schedule= (
-                    (Schedule)=>{
-                        return !Schedule?null:
-                        {
-                            enter_at: convertDateToUnit(new Date(Schedule.enter_at)),
-                            exit_at: convertDateToUnit(new Date(Schedule.exit_at))
-                        }
-                    }
-                )(user.Schedule);
-                return user;
-            }
-        )
-        .filter(
-            ({schedule})=>{
-                return schedule && (
-                    ({enter_at, exit_at})=>{
-                        return enter_at.major<=day && day<=exit_at.major
-                    }
-                )(schedule)
-            }
-        )
         .reduce(
             ([disconnected, connected], user)=>{
                 const {Following, Followed} = user;
@@ -59,7 +36,7 @@ async function getConnectionDocument(day, loadedSequelize, today=convertDateToUn
                             (connectionInfo)=>{
                                 const connection = Connection.build(connectionInfo);
                                 const {isValid, willBeValid} = connection;
-                                return !isValid && (willBeValid!==day) && !(convertDateToUnit(connection.expired_at).day>day);
+                                return !isValid && (willBeValid!==day);
                             }
                         ).length === 0;
                     }
@@ -69,35 +46,43 @@ async function getConnectionDocument(day, loadedSequelize, today=convertDateToUn
                     [disconnected, [...connected, user]]
             },
             [[], []]
+        )
+        .map(
+            (users)=>{
+                return users
+                .map(
+                    (user)=>{
+                        const {user_id, col_no, major, name, Following, Followed} = user;
+                        return {
+                            user_id, col_no, major, name,
+                            Following, Followed,
+                            schedule: (
+                                (Schedule)=>{
+                                    return !Schedule?null:
+                                    {
+                                        enter_at: convertDateToUnit(new Date(Schedule.enter_at)),
+                                        exit_at: convertDateToUnit(new Date(Schedule.exit_at))
+                                    }
+                                }
+                            )(user.Schedule)
+                        }
+                    }
+                )
+                .filter(
+                    ({schedule})=>{
+                        return schedule && (
+                            ({enter_at, exit_at})=>{
+                                return enter_at.major<=day && day<=exit_at.major
+                            }
+                        )(schedule)
+                    }
+                );
+            }
         );
 
         const connections = connectedUsers.map(
             ({Following})=>{
-                const validFollowing = (
-                    (connections)=>{
-                        const willBeValid = connections.find(({willBeValid})=>willBeValid===day);
-                        if(willBeValid){
-                            return willBeValid;
-                        }
-                        const isValid = connections.find(({isValid})=>isValid);
-                        if(isValid){
-                            return isValid;
-                        }
-                        return connections.sort(
-                            (a, b)=>{
-                                const A = new Date(a.expired_at);
-                                const B = new Date(b.expired_at);
-                                if(B>A){
-                                    return -1;
-                                }
-                                if(A>B){
-                                    return 1;
-                                }
-                                return 0;
-                            }
-                        )[0];
-                    }
-                )(Following.map(connectionInfo=>Connection.build(connectionInfo)));
+                const validFollowing = Following.filter(({expired_at})=>expired_at===null)[0];
                 const {follower_id, followee_id} = validFollowing;
                 return {
                     follower_id, followee_id
