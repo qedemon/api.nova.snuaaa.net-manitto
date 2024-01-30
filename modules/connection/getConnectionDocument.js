@@ -97,7 +97,7 @@ async function getConnectionDocument(day, loadedSequelize, today=convertDateToUn
                             }
                         )[0];
                     }
-                )(Following.map(connectionInfo=>Connection.build(connectionInfo)));
+                )(Following.map(connectionInfo=>Connection.build(connectionInfo.dataValues)));
                 const {follower_id, followee_id} = validFollowing;
                 return {
                     follower_id, followee_id
