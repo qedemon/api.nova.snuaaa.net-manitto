@@ -1,0 +1,3 @@
+[submodule "modules/connection/AAA_manito"]
+	path = modules/connection/AAA_manito
+	url = https://github.com/89645321/AAA_manito.git
