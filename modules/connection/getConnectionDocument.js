@@ -2,8 +2,9 @@ const {createSequelize, closeSequelize} = require("modules/sequelize");
 const defineModel = require("models");
 const {convertDateToUnit, convertUnitToDate} = require("modules/Utility/convertDate");
 const getNow = require("modules/Utility/getNow");
+const getConnectionGroups = require("modules/Utility/connectionGroups");
 
-async function getConnectionDocument(day, loadedSequelize, today=convertDateToUnit(getNow()).major){
+async function getConnectionDocument(day, loadedSequelize=null, today=convertDateToUnit(getNow()).major){
     const sequelize = loadedSequelize || (await createSequelize()).sequelize;
     const Sequelize = sequelize.Sequelize;
     const {DataTypes, Op} = Sequelize;
@@ -45,7 +46,7 @@ async function getConnectionDocument(day, loadedSequelize, today=convertDateToUn
             ({schedule})=>{
                 return schedule && (
                     ({enter_at, exit_at})=>{
-                        return enter_at.major<=day && day<=exit_at.major
+                        return (enter_at.major<=day && day<=exit_at.major) && (enter_at.major<=today)
                     }
                 )(schedule)
             }
@@ -105,48 +106,7 @@ async function getConnectionDocument(day, loadedSequelize, today=convertDateToUn
             }
         );
         
-        const connectionGroups = (
-            (connections)=>{
-                const step = (remain, connectionGroups)=>{
-                    if(remain.length===0){
-                        return {remain, connectionGroups};
-                    }
-                    const lastGroup = connectionGroups[connectionGroups.length-1];
-                    const remainGroups = connectionGroups.slice(0, connectionGroups.length-1);
-                    if(lastGroup.length===0){
-                        return {
-                            remain: remain.slice(1),
-                            connectionGroups: [...remainGroups, [remain[0]]]
-                        };
-                    }
-                    const lastConnection = lastGroup[lastGroup.length-1];
-                    const {followee_id} = lastConnection;
-                    const followingConnectionIndex = remain.findIndex(
-                        ({follower_id})=>follower_id===followee_id
-                    );
-                    if(followingConnectionIndex<0){
-                        return {
-                            remain,
-                            connectionGroups: [...connectionGroups, []]
-                        }
-                    }
-                    const newRemain = [...remain];
-                    newRemain.splice(followingConnectionIndex, 1);
-                    return {
-                        remain: newRemain,
-                        connectionGroups: [...remainGroups, [...lastGroup, remain[followingConnectionIndex]]]
-                    }
-                };
-                let remain = connections;
-                let connectionGroups = [[]];
-                while(remain.length>0){
-                    const stepReult = step(remain, connectionGroups);
-                    remain = stepReult.remain;
-                    connectionGroups = stepReult.connectionGroups;
-                }
-                return connectionGroups;
-            }
-        )(connections);
+        const connectionGroups = getConnectionGroups(connections);
 
         return {
             data: {
@@ -171,7 +131,9 @@ async function getConnectionDocument(day, loadedSequelize, today=convertDateToUn
         }
     }
     finally{
-        await closeSequelize(sequelize);
+        if(loadedSequelize===null){
+            await closeSequelize(sequelize);
+        }
     }
 }
 
