@@ -74,7 +74,7 @@ async function connect(follower_id, followee_id, loadedSequelize=null, options={
         if(!followee){
             throw (`invalid followee ${followee_id}`);
         }
-        const {disconnected, error} = connection?(await disconnect(connection.follower_id, connection.followee_id)):{disconnected:[]};
+        const {disconnected, error} = connection?(await disconnect(connection.follower_id, connection.followee_id, sequelize, options)):{disconnected:[]};
         if(error){
             throw error;
         }

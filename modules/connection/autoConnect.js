@@ -1,25 +1,111 @@
-const {createSequelize, closeSequelize} = require("modules/sequelize");
-const defineModel = require("models");
-const {convertDateToUnit, convertUnitToDate} = require("modules/Utility/convertDate");
+const {convertDateToUnit} = require("modules/Utility/convertDate");
 const getNow = require("modules/Utility/getNow");
+const executeAutoConnect = require("./executeAutoConnect");
+const getConnectionGroups = require("modules/Utility/connectionGroups");
 
-async function autoConnect(command, data, loadedSequelize, today=convertDateToUnit(getNow()).major){
-    const sequelize = loadedSequelize || (await createSequelize()).sequelize;
-    const Sequelize = sequelize.Sequelize;
-    const {DataTypes, Op} = Sequelize;
+function editData(inputData, connections){
+    return inputData.map(
+        (inputData, index)=>{
+            return (
+                ({disconnected, connected}, connectionsToUpdate)=>{
+                    const users = [...disconnected, ...connected]
+                    .map(
+                        (
+                            (connections)=>(user)=>{
+                                const followingConnection = connections.find(({follower_id})=>follower_id===user.user_id);
+                                const followedConnection = connections.find(({followee_id})=>followee_id===user.user_id);
+                                return {
+                                    ...user,
+                                    following: followingConnection?.followee_id??null,
+                                    followed: followedConnection?.follower_id??null
+                                }
+                            }
+                        )(connectionsToUpdate)
+                    );
+                    const newDisconnected = users.filter(({following, followed})=>(following===null)&&(followed===null));
+                    const newConnected= users.filter(({following, followed})=>(following!==null)||(followed!==null));
+                    const newConnections = newConnected.map(
+                        ({following, user_id})=>{
+                            return {
+                                follower_id: user_id,
+                                followee_id: following
+                            }
+                        }
+                    );
+                    return {
+                        disconnected: newDisconnected,
+                        connected: newConnected,
+                        connectionGroups: getConnectionGroups(newConnections)
+                    }
+                }
+            )(inputData, connections[index])
+        }
+    )
+}
+
+async function autoConnect(command, inputData, today=convertDateToUnit(getNow()).major){
     try{
+        const commands = {
+            "linear": "1",
+            "circular": "0"   
+        };
+        const selectedCommand = commands[command];
+        if(selectedCommand===undefined){
+            throw new Error(`invalid command : ${command}`);
+        }
+        const users = Array.from(
+            (
+                new Map(
+                    inputData.reduce(
+                        (result, {disconnected, connected})=>[...result, ...disconnected, ...connected],
+                        []
+                    ).map(
+                        (user)=>{
+                            return [
+                                user.user_id,
+                                user
+                            ]
+                        }
+                    )
+                )
+            ).values()
+        );
+        console.log(users.length);
+    
+        const connections = inputData.map(
+            ({connectionGroups})=>{
+                return connectionGroups
+                .reduce(
+                    (result, group)=>{
+                        return [...result, ...group.filter(({followee_id})=>followee_id!==null)];
+                    },
+                    []
+                )
+            }
+        );
+        const {data: connectData, error} = await executeAutoConnect(
+            {
+                users,
+                connections0: connections[0]??[],
+                connections1: connections[1]??[],
+                connections2: connections[2]??[],
+                command: selectedCommand,
+                day: today
+            }
+        )
+        if(error){
+            throw error;
+        }
+
         return {
-            data
+            command: selectedCommand,
+            data: editData(inputData, connectData.connections)
         }
     }
     catch(error){
-        console.error(error);
         return {
             error
         }
-    }
-    finally{
-        await closeSequelize(sequelize);
     }
 }
 

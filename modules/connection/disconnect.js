@@ -3,7 +3,7 @@ const defineModels = require("models");
 const getNow = require("modules/Utility/getNow");
 
 async function disconnect(follower_id, followee_id, loadedSequelize=null, options={}){
-    const sequelize = await(loadedSequelize?loadedSequelize: (await createSequelize()).sequelize);
+    const sequelize = loadedSequelize||(await createSequelize()).sequelize;
 
     try{
         const {User, Connection} = defineModels(sequelize, sequelize.Sequelize.DataTypes);
@@ -55,7 +55,7 @@ async function disconnect(follower_id, followee_id, loadedSequelize=null, option
     }
     finally{
         if(loadedSequelize === null){
-            //closeSequelize(sequelize);
+            closeSequelize(sequelize);
         }
     }
 

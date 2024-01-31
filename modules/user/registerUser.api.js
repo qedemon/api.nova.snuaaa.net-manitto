@@ -1,7 +1,8 @@
 const authorize = require("modules/authorize/middleware");
 const express = require("express");
 const Result = require("modules/Utility/Result");
-const {registerUser, setMission} = require("./module");
+const {registerUser} = require("./module");
+const getNow = require("modules/Utility/getNow");
 
 function attachRegisterUser(app){
     app.use("/registerUser", authorize);
@@ -13,7 +14,7 @@ function attachRegisterUser(app){
             }
             const userInfo = req.authorization.userInfo;
             userInfo.mission_difficulty = req.body.mission_rank;
-            userInfo.enter_at = Date.now();
+            userInfo.enter_at = getNow();
             userInfo.exit_at = req.body.exit_at;
             const {user, error} = await registerUser(userInfo);
             if(error){

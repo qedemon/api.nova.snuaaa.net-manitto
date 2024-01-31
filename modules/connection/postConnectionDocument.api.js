@@ -15,7 +15,7 @@ function attachPostConnectionDocument(app){
             if(!data){
                 throw new Error("invalid data");
             }
-            const {error, day:newDay, data: newData} = await setConnectionDocument(day, data);
+            const {error, day:newDay, data: newData, updates} = await setConnectionDocument(day, data);
             if(error){
                 throw error;
             }
@@ -23,6 +23,7 @@ function attachPostConnectionDocument(app){
                 {
                     result: Result.success,
                     day: newDay,
+                    updates,
                     data: newData
                 }
             )
