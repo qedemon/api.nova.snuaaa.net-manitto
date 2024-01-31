@@ -24,7 +24,10 @@ app.post("/", async (req, res)=>{
 
     if(result.token)
         res.append("Set-Cookie", `token=${result.token}; Path=/;`);
-    res.json(result);
+    if(!result.authenticated)
+        res.status(403).json(result);
+    else
+        res.json(result);
 });
 
 app.get("/", (req, res)=>{

@@ -49,7 +49,7 @@ async function registerUser(user_info){
                 major: user_info.major,
                 id: user_info.id,
                 Schedule: {
-                    enter_at: sequelize.Sequelize.fn("Now"),
+                    enter_at: user_info.enter_at,
                     exit_at: user_info.exit_at
                 },
             },

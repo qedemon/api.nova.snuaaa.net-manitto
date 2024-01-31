@@ -15,11 +15,13 @@ async function getUser(condition, loadedSequelize=null){
                     {
                         model: Connection,
                         as: "Following",
-                        attributes: ["expired_at"],
                         include: {
                             model: User,
                             as: "Followee",
-                            attributes: ["name", "col_no", "major"]
+                            attributes: ["name", "col_no", "major"],
+                            include: [
+                                Schedule
+                            ]
                         },
                     },
                     {
@@ -48,8 +50,8 @@ async function getUser(condition, loadedSequelize=null){
                             major,
                             isAdmin,
                             following: Following.map(
-                                ({Followee: {name, col_no, major}, expired_at, isValid})=>{
-                                    return {name, col_no, major, expired_at, isValid};
+                                ({Followee: {name, col_no, major, Schedule}, expired_at, isValid})=>{
+                                    return {name, col_no, major, expired_at, isValid, exit_at: Schedule?.exit_at};
                                 }
                             ),
                             Schedule,
