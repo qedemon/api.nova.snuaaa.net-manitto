@@ -10,7 +10,11 @@ async function disconnect(follower_id, followee_id, loadedSequelize=null, option
         const connection = (
             await Connection.findAll(
                 {
-                    where: {
+                    where: (follower_id===null)?
+                    {
+                        follower_id
+                    }:
+                    {
                         follower_id,
                         followee_id
                     },

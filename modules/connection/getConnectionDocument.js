@@ -58,9 +58,15 @@ async function getConnectionDocument(day, loadedSequelize=null, today=convertDat
                     (connections)=>{
                         return connections.filter(
                             (connectionInfo)=>{
-                                const connection = Connection.build(connectionInfo);
-                                const {isValid, willBeValid} = connection;
-                                return !isValid && (willBeValid!==day) && !(convertDateToUnit(connection.expired_at).day>day);
+                                const connection = Connection.build(connectionInfo.dataValues);
+                                const {isValid, willBeValid, expired_at} = connection;
+                                if(day<today){
+                                    return isValid || convertDateToUnit(expired_at).major>day;
+                                }
+                                if(day>today){
+                                    return willBeValid===day;
+                                }
+                                return isValid;
                             }
                         ).length === 0;
                     }
@@ -71,17 +77,16 @@ async function getConnectionDocument(day, loadedSequelize=null, today=convertDat
             },
             [[], []]
         );
-
         const connections = connectedUsers.map(
-            ({Following})=>{
+            ({Following, user_id})=>{
                 const validFollowing = (
                     (connections)=>{
                         const willBeValid = connections.find(({willBeValid})=>willBeValid===day);
-                        if(willBeValid){
+                        if(day>today){
                             return willBeValid;
                         }
                         const isValid = connections.find(({isValid})=>isValid);
-                        if(isValid){
+                        if(day===today){
                             return isValid;
                         }
                         return connections.sort(
@@ -99,13 +104,12 @@ async function getConnectionDocument(day, loadedSequelize=null, today=convertDat
                         )[0];
                     }
                 )(Following.map(connectionInfo=>Connection.build(connectionInfo.dataValues)));
-                const {follower_id, followee_id} = validFollowing;
                 return {
-                    follower_id, followee_id
+                    follower_id: user_id,
+                    followee_id: validFollowing?.followee_id??null
                 }
             }
         );
-        
         const connectionGroups = getConnectionGroups(connections);
 
         return {
