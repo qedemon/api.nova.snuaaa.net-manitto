@@ -11,7 +11,7 @@ function attachGetConnectionDocument(app){
             if(!req.authorization?.userInfo?.isAdmin){
                 throw new Error(`unauthorized user ${req.authorization?.userInfo?.name}`);
             }
-            const {data, error} = await getConnectionDocument(req.params.day);
+            const {data, error} = await getConnectionDocument(parseInt(req.params.day));
             if(error){
                 throw error
             }

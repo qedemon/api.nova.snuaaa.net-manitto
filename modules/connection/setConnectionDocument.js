@@ -84,7 +84,10 @@ async function setConnectionDocument(day, data, loadedSequelize=null, today=conv
         await updates.toConnect.reduce(
             async (last, toConnect)=>{
                 await last;
-                const {error} = await connect(toConnect.follower_id, toConnect.followee_id, sequelize, (day>today)?{willBeValid: day}:{});
+                if(toConnect.followee_id)
+                    await connect(toConnect.follower_id, toConnect.followee_id, sequelize, (day>today)?{willBeValid: day}:{});
+                else
+                    await disconnect(toConnect.follower_id, null, sequelize, (day>today)?{willBeValid: day}:{});
             },
             Promise.resolve()
         );
