@@ -35,8 +35,7 @@ async function sendPush(user_id, data, loadedSequelize = null){
                     privateKey: key.private
                 }
             };
-            const error = webpush.sendNotification(subscription, JSON.stringify(data), options);
-            console.log(error);
+            await webpush.sendNotification(subscription, JSON.stringify(data), options);
             return {
                 pushed: [data]
             };
