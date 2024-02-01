@@ -66,7 +66,7 @@ async function setConnectionDocument(day, data, loadedSequelize=null, today=getT
         if(day<today)
             return {
                 day,
-                data
+                data: (await getConnectionDocument(day, sequelize, today)).data,
             };
         const prevData = await (
             async ()=>{
