@@ -17,7 +17,7 @@
   "scripts": {
     "start": "NODE_PATH=. node server.js",
     "nodemon": "NODE_PATH=. nodemon server.js",
-    "install": "NODE_PATH=. node install/install.js",
+    "dataInstall": "NODE_PATH=. node install/install.js",
     "testCase": "NODE_PATH=. node install/test_case.js",
     "test": "NODE_PATH=. jest"
   },
