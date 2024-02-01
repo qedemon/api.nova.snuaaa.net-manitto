@@ -60,7 +60,7 @@ async function getUser(condition, loadedSequelize=null){
                                         return undefined;
                                     }
                                 }
-                            ),
+                            ).filter(item=>item),
                             Schedule,
                             Mission
                         }
