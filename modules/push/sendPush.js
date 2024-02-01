@@ -1,7 +1,9 @@
 const {createSequelize, closeSequelize} = require("modules/sequelize");
 const defineModels = require("models");
+const getVAPIDKey = require("./getVAPIDKey");
+const webpush = require("web-push");
 
-async function registerPush(user_id, subscription, loadedSequelize = null){
+async function sendPush(user_id, data, loadedSequelize = null){
     const sequelize = loadedSequelize || (await createSequelize()).sequelize;
     const Sequelize = sequelize.Sequelize;
     const {DataTypes} = Sequelize;
@@ -22,23 +24,27 @@ async function registerPush(user_id, subscription, loadedSequelize = null){
         }
         const push = user.Push;
         if(push){
-            push.subscription = JSON.stringify(subscription);
-            await push.save();
+            const subscription = JSON.parse(push.subscription);
+            //console.log(subscription);
+            const key = getVAPIDKey();
+            const options = {
+                TTL: 24*60*60,
+                vapidDetails: {
+                    subject: "https://manitto.snuaaa.net:9889",
+                    publicKey: key.public,
+                    privateKey: key.private
+                }
+            };
+            const error = webpush.sendNotification(subscription, JSON.stringify(data), options);
+            console.log(error);
+            return {
+                pushed: [data]
+            };
         }
         else{
-            await user.createPush(
-                {
-                    subscription: JSON.stringify(subscription)
-                }
-            )
-        }
-        await user.reload(
-            {
-                include: [Push]
+            return {
+                pushed: []
             }
-        )
-        return {
-            user
         }
     }
     catch(error){
@@ -53,4 +59,4 @@ async function registerPush(user_id, subscription, loadedSequelize = null){
     }
 }
 
-module.exports = registerPush;
+module.exports = sendPush;
