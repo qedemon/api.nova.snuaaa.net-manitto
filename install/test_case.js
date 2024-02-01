@@ -30,33 +30,6 @@ const createRandomUserInfo = require("./testCase/createRandomUserInfo");
         });
         const missions = await Mission.bulkCreate(missionInfo);
 
-        const userInfo = createRandomUserInfo(50);
-        await User.destroy(
-            {
-                where:{
-
-                }
-            }
-        );
-        const user = await User.bulkCreate(
-            userInfo.map(
-                (user)=>{
-                    const {user_id, id, name, col_no, major} = user;
-                    const {schedule} = user;
-                    return {
-                        user_id, id, name, col_no, major,
-                        Schedule: schedule
-                    }
-                }
-            ),
-            {
-                include: [
-                    Schedule
-                ]
-            }
-        )
-
-        console.log(user.length);
 
         await closeSequelize(sequelize);
     }

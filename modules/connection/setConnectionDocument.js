@@ -40,13 +40,17 @@ function getUpdate(prevData, data){
                     return follower_id===connection.follower_id;
                 }
             );
-            if(newConnection?.follwee_id === connection.follwee_id){
+            if(newConnection?.followee_id === connection.followee_id){
                 return result;
             }
             return [...result, connection];
         },
         []
     );
+    /*console.log("new", newConnections);
+    console.log("prev", prevConnections);
+    console.log("connect", planToConnect);
+    console.log("disconnect", planToDisconnect);*/
     return {
         toConnect: planToConnect,
         toDisconnect: planToDisconnect
