@@ -1,10 +1,10 @@
 const {createSequelize, closeSequelize} = require("modules/sequelize");
 const defineModel = require("models");
 const {convertDateToUnit, convertUnitToDate} = require("modules/Utility/convertDate");
-const getNow = require("modules/Utility/getNow");
+const getToday = require("modules/Utility/getToday");
 const getConnectionGroups = require("modules/Utility/connectionGroups");
 
-async function getConnectionDocument(day, loadedSequelize=null, today=convertDateToUnit(getNow()).major){
+async function getConnectionDocument(day, loadedSequelize=null, today=getToday()){
     const sequelize = loadedSequelize || (await createSequelize()).sequelize;
     const Sequelize = sequelize.Sequelize;
     const {DataTypes, Op} = Sequelize;
@@ -89,15 +89,27 @@ async function getConnectionDocument(day, loadedSequelize=null, today=convertDat
                         if(day===today){
                             return isValid;
                         }
-                        return connections.sort(
+                        return connections
+                        .filter(
+                            ({expired_at})=>{
+                                return isValid || convertDateToUnit(expired_at).major>day;
+                            }
+                        )
+                        .sort(
                             (a, b)=>{
+                                if(a.expired_at===null){
+                                    return 1;
+                                }
+                                if(b.expired_at===null){
+                                    return -1;
+                                }
                                 const A = new Date(a.expired_at);
                                 const B = new Date(b.expired_at);
                                 if(B>A){
-                                    return -1;
+                                    return 1;
                                 }
                                 if(A>B){
-                                    return 1;
+                                    return -1;
                                 }
                                 return 0;
                             }
