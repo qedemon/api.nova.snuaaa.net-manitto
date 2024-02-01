@@ -3,6 +3,7 @@ const {convertDateToUnit, reference} = require("./convertDate");
 
 function getToday(){
     const unit = convertDateToUnit(getNow());
+    return unit.major;
     if(unit.minor >= reference[unit.major].length-1){
         return unit.major;
     }
@@ -19,4 +20,4 @@ function getToday(){
     )(unit.major-1, 0, reference.length-1)
 }
 
-module.exports = getToday();
+module.exports = getToday;

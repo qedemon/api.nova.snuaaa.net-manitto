@@ -1,5 +1,6 @@
 const {convertDateToUnit} = require("modules/Utility/convertDate");
 const getNow = require("modules/Utility/getNow");
+const getToday = require("modules/Utility/getToday");
 const executeAutoConnect = require("./executeAutoConnect");
 const getConnectionGroups = require("modules/Utility/connectionGroups");
 
@@ -43,7 +44,7 @@ function editData(inputData, connections){
     )
 }
 
-async function autoConnect(command, inputData, today=convertDateToUnit(getNow()).major){
+async function autoConnect(command, inputData, today=getToday()){
     try{
         const commands = {
             "linear": "1",

@@ -1,10 +1,10 @@
 const {createSequelize, closeSequelize} = require("modules/sequelize");
 const defineModel = require("models");
 const {convertDateToUnit, convertUnitToDate} = require("modules/Utility/convertDate");
-const getNow = require("modules/Utility/getNow");
+const getToday = require("modules/Utility/getToday");
 const connect = require("./connect");
 
-async function validateConnection(loadedSequelize=null, today = convertDateToUnit(getNow()).major){
+async function validateConnection(loadedSequelize=null, today = getToday()){
     const sequelize = loadedSequelize || (await createSequelize()).sequelize;
     try{
         const {User, Connection} = defineModel(sequelize, sequelize.Sequelize.DataTypes);

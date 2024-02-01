@@ -1,10 +1,10 @@
 const {createSequelize, closeSequelize} = require("modules/sequelize");
 const defineModel = require("models");
 const {convertDateToUnit, convertUnitToDate} = require("modules/Utility/convertDate");
-const getNow = require("modules/Utility/getNow");
+const getToday = require("modules/Utility/getToday");
 const getConnectionGroups = require("modules/Utility/connectionGroups");
 
-async function getConnectionDocument(day, loadedSequelize=null, today=convertDateToUnit(getNow()).major){
+async function getConnectionDocument(day, loadedSequelize=null, today=getToday()){
     const sequelize = loadedSequelize || (await createSequelize()).sequelize;
     const Sequelize = sequelize.Sequelize;
     const {DataTypes, Op} = Sequelize;

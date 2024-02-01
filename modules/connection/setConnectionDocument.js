@@ -2,6 +2,7 @@ const {createSequelize, closeSequelize} = require("modules/sequelize");
 const defineModel = require("models");
 const {convertDateToUnit, convertUnitToDate} = require("modules/Utility/convertDate");
 const getNow = require("modules/Utility/getNow");
+const getToday = require("modules/Utility/getToday");
 const getConnectionDocument = require("./getConnectionDocument");
 const connect = require("./connect");
 const disconnect = require("./disconnect");
@@ -57,7 +58,7 @@ function getUpdate(prevData, data){
     }
 }
 
-async function setConnectionDocument(day, data, loadedSequelize=null, today=convertDateToUnit(getNow()).major){
+async function setConnectionDocument(day, data, loadedSequelize=null, today=getToday()){
     const sequelize = loadedSequelize || (await createSequelize()).sequelize;
     const Sequelize = sequelize.Sequelize;
     const {DataTypes, Op} = Sequelize;
