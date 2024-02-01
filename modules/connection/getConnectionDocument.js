@@ -89,9 +89,10 @@ async function getConnectionDocument(day, loadedSequelize=null, today=getToday()
                         if(day===today){
                             return isValid;
                         }
+                        
                         return connections
                         .filter(
-                            ({expired_at})=>{
+                            ({isValid, expired_at})=>{
                                 return isValid || convertDateToUnit(expired_at).major>day;
                             }
                         )
