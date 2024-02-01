@@ -89,15 +89,27 @@ async function getConnectionDocument(day, loadedSequelize=null, today=getToday()
                         if(day===today){
                             return isValid;
                         }
-                        return connections.sort(
+                        return connections
+                        .filter(
+                            ({expired_at})=>{
+                                return isValid || convertDateToUnit(expired_at).major>day;
+                            }
+                        )
+                        .sort(
                             (a, b)=>{
+                                if(a.expired_at===null){
+                                    return 1;
+                                }
+                                if(b.expired_at===null){
+                                    return -1;
+                                }
                                 const A = new Date(a.expired_at);
                                 const B = new Date(b.expired_at);
                                 if(B>A){
-                                    return -1;
+                                    return 1;
                                 }
                                 if(A>B){
-                                    return 1;
+                                    return -1;
                                 }
                                 return 0;
                             }
