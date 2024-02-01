@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const cors = require("cors");
 const routes = JSON.parse(fs.readFileSync(path.join(__dirname, "routes.json"), "utf-8"));
+const getToday = require("modules/Utility/getToday");
 
 module.exports = async ()=>{
     const app = express();
@@ -23,5 +24,6 @@ module.exports = async ()=>{
             }
         )
     )
+    console.log(`today is ${getToday()}`);
     return app;
 }
