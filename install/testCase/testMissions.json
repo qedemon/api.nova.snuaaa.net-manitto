@@ -1,32 +1,69 @@
 [
     {
-        "title": "임의의 1단계 미션입니다.",
-        "description": "나도 뭘 시켜야할지 모르겠다.",
+        "title": "간단한 간식 선물로 주기",
+        "description": "간단한 간식 선물로 주기",
         "difficulty": 1
     },
     {
-        "title": "임의의 1단계 미션입니다.",
-        "description": "그래도 뭔가라도 해보도록 하거라",
+        "title": "다른 사람들에게 마니또 칭찬하기",
+        "description": "다른 사람들에게 마니또 칭찬하기",
         "difficulty": 1
     },
     {
-        "title": "임의의 2단계 미션입니다.",
-        "description": "마니또 시스템 테스트를 위한 테스트 데이터들을 생성하는 코드를 작성하시오.",
+        "title": "마니또와 날씨를 주제로 대화하기",
+        "description": "마니또와 날씨를 주제로 대화하기",
+        "difficulty": 1
+    },
+    {
+        "title": "마니또와 가위바위보",
+        "description": "마니또와 가위바위보",
+        "difficulty": 1
+    },
+    {
+        "title": "마니또 눈 10초동안 바라보기",
+        "description": "마니또 눈 10초동안 바라보기",
+        "difficulty": 1
+    },
+
+    {
+        "title": "물건 하나 빌렸다 돌려주기",
+        "description": "물건 하나 빌렸다 돌려주기",
         "difficulty": 2
     },
     {
-        "title": "임의의 2단계 미션입니다.",
-        "description": "창의적인 미션들을 생성하시오.",
+        "title": "마니또 이름으로 자필 3행시 지어 전달 (전달은 다른 사람에게 맡겨도 OK)",
+        "description": "마니또 이름으로 자필 3행시 지어 전달 (전달은 다른 사람에게 맡겨도 OK)",
         "difficulty": 2
     },
     {
-        "title": "임의의 3단계 미션입니다.",
-        "description": "다음에 뭘 해야할지 알려줘.",
+        "title": "마니또에게 '잘 부탁드립니다'라고 말하면서 술(또는 음료나 물) 한 잔 받기",
+        "description": "마니또에게 '잘 부탁드립니다'라고 말하면서 술(또는 음료나 물) 한 잔 받기",
+        "difficulty": 2
+    },
+    {
+        "title": "마니또와 하이파이브하기",
+        "description": "마니또와 하이파이브하기",
+        "difficulty": 2
+    },
+    {
+        "title": "같이 셀카 찍기",
+        "description": "같이 셀카 찍기",
+        "difficulty": 2
+    },
+
+    {
+        "title": "외계인의 존재에 대한 마니또의 견해 알아오기",
+        "description": "외계인의 존재에 대한 마니또의 견해 알아오기",
         "difficulty": 3
     },
     {
-        "title": "임의의 3단계 미션입니다.",
-        "description": "chat gpt를 만들어줘.",
+        "title": "마니또에게 '왜 그러냐(왜 그러세요)' 라는 말 듣기",
+        "description": "마니또에게 '왜 그러냐(왜 그러세요)' 라는 말 듣기",
+        "difficulty": 3
+    },
+    {
+        "title": "마니또에게 아재개그하고 반응보기",
+        "description": "마니또에게 아재개그하고 반응보기",
         "difficulty": 3
     }
 ]
