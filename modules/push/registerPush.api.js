@@ -1,4 +1,4 @@
-const {registerPush} = require("./module");
+const {registerPush, sendPush} = require("./module");
 const authorize = require("modules/authorize/middleware");
 const express = require("express");
 const Result = require("modules/Utility/Result");
@@ -27,7 +27,11 @@ function attachRegisterPush(app){
                         subscription: user.Push.subscription
                     }
                 }
-            )
+            );
+            await sendPush(user_id, {
+                title: "AAA-Manitto",
+                body: "마니또가 바뀌면 알려드릴게요."
+            })
         }
         catch(error){
             res.json(
