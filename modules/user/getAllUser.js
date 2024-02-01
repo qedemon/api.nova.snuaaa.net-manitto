@@ -1,6 +1,7 @@
 const {createSequelize, closeSequelize} = require("modules/sequelize");
 const defineModels = require("models");
 const {convertDateToUnit} = require("modules/Utility/convertDate");
+const getNow = require("modules/Utility/getNow");
 
 async function getAllUser(loadedSequelize=null){
     const sequelize = (loadedSequelize || (await createSequelize()).sequelize);
@@ -37,6 +38,9 @@ async function getAllUser(loadedSequelize=null){
                             model: User,
                             as: "Followee",
                             include: Mission
+                        },
+                        where: {
+                            willBeValid: null
                         }
                     },
                     {
@@ -46,6 +50,9 @@ async function getAllUser(loadedSequelize=null){
                             model: User,
                             as: "Follower",
                             include: Mission
+                        },
+                        where: {
+                            willBeValid: null
                         }
                     },
                 ]
@@ -64,9 +71,17 @@ async function getAllUser(loadedSequelize=null){
         };
         const filterConnection = ({connection, userKey})=>{
             return {
-                user_info: filterUser(connection[userKey]),
+                user_info: {
+                    ...filterUser(connection[userKey]), 
+                    mission: (
+                        (Mission)=>{
+                            return Mission?filterMission(Mission):{};
+                        }
+                    )(connection[userKey].Mission)
+                },
                 expired_at: connection.expired_at,
-                isValid: connection.isValid
+                isValid: connection.isValid,
+                willBeValid: connection.willBeValid
             }
         };
         const filterSchedule = ({enter_at, exit_at})=>{
@@ -126,7 +141,7 @@ async function getAllUser(loadedSequelize=null){
                                         return {
                                             ...connection,
                                             start: convertDateToUnit(new Date(connection.start_at)),
-                                            end: connection.expired_at?convertDateToUnit(new Date(connection.expired_at)):null
+                                            end: connection.expired_at?convertDateToUnit(new Date(connection.expired_at)):convertDateToUnit(getNow())
                                         }
                                     }
                                 )
