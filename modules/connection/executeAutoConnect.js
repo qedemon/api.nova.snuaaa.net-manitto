@@ -6,6 +6,8 @@ const fs = require("fs");
 async function executeAutoConnect(data){
     try{
         const dataStr = JSON.stringify(data, {}, "\t");
+        fs.writeFileSync(path.join(process.env.SHARED_FILES, "autoConenctInput.json"), dataStr);
+        
         const {stdout, stderr} = await (
             new Promise(
                 (resolve)=>{
@@ -31,7 +33,6 @@ async function executeAutoConnect(data){
             throw new Error(stderr);
         }
         const rawData = JSON.parse(stdout);
-        fs.writeFileSync(path.join(process.env.SHARED_FILES, "autoConenctInput.json"), dataStr);
         fs.writeFileSync(path.join(process.env.SHARED_FILES, "autoConenctOutput.json"), stdout);
         return {
             data: {

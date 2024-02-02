@@ -64,7 +64,10 @@ async function autoConnect(command, inputData, today=getToday()){
                         (user)=>{
                             return [
                                 user.user_id,
-                                user
+                                {
+                                    ...user,
+                                    col_no: user.col_no===""?"23":user.col_no
+                                }
                             ]
                         }
                     )

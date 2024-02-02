@@ -39,9 +39,6 @@ async function getAllUser(loadedSequelize=null){
                             as: "Followee",
                             include: Mission
                         },
-                        where: {
-                            willBeValid: null
-                        }
                     },
                     {
                         model: Connection,
@@ -51,13 +48,10 @@ async function getAllUser(loadedSequelize=null){
                             as: "Follower",
                             include: Mission
                         },
-                        where: {
-                            willBeValid: null
-                        }
                     },
                 ]
             }
-        )
+        );
 
         const filterUser = ({user_id, name, col_no, major})=>{
             return {
@@ -119,6 +113,9 @@ async function getAllUser(loadedSequelize=null){
                                         return 0;
                                     }
                                 )
+                                .filter(({willBeValid})=>{
+                                    return willBeValid===null;
+                                })
                                 .map((connection)=>{return {connection, userKey}})
                                 .map(filterConnection)
                                 .reduce(
