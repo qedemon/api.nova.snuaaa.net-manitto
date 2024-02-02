@@ -45,8 +45,8 @@ async function registerUser(user_info){
             {
                 user_id: user_info.user_id,
                 name: user_info.name,
-                col_no: user_info.col_no,
-                major: user_info.major,
+                col_no: user_info.col_no===""?"23":user_info.col_no,
+                major: user_info.major===""?"아마추어천문학과":user_info.major,
                 id: user_info.id,
                 Schedule: {
                     enter_at: user_info.enter_at,
