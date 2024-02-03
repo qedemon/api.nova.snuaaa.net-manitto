@@ -99,10 +99,10 @@ async function getAllUser(loadedSequelize=null){
                                 .sort(
                                     (a, b)=>{
                                         if(a.expired_at === null){
-                                            return -1;
+                                            return 1;
                                         }
                                         if(b.expired_at === null){
-                                            return 1;
+                                            return -1;
                                         }
                                         if(a.expired_at<b.expired_at){
                                             return -1;
