@@ -99,10 +99,10 @@ async function getConnectionDocument(day, loadedSequelize=null, today=getToday()
                         .sort(
                             (a, b)=>{
                                 if(a.expired_at===null){
-                                    return 1;
+                                    return -1;
                                 }
                                 if(b.expired_at===null){
-                                    return -1;
+                                    return 1;
                                 }
                                 const A = new Date(a.expired_at);
                                 const B = new Date(b.expired_at);
