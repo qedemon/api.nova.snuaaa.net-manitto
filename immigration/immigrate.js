@@ -1,0 +1,164 @@
+require("dotenv").config();
+const {createSequelize, closeSequelize} = require("modules/sequelize");
+const defineModels = require("models");
+const {connect: connectMongo, disconnect: disconnectMongo} = require("modules/mongoose");
+const { User: mongoDBUser, Mission: mongoDBMission, ConnectionDocument} = require("models/mongoDB");
+
+const run = async ()=>{
+    const {sequelize} = await createSequelize();
+    const Sequelize = sequelize.Sequelize;
+    const {Connection, User, Schedule, Push, Mission} = defineModels(sequelize, Sequelize.DataTypes);
+    const missions = await Mission.findAll();
+    const immigrateMissions = missions.map(
+        ({id, title, description, difficulty})=>{
+            return {
+                _id: id,
+                title, description, difficulty
+            }
+        }
+    )
+    const users = await (
+        User.findAll(
+            {
+                where: {
+                    isAdmin: false
+                },
+                include: [
+                    Schedule,
+                    Push,
+                    Mission
+                ]
+            }
+        )
+    );
+    const immigrateUsers = users.map(
+        ({user_id, name, col_no, major, Schedule, Push, Mission})=>{
+            return {
+                _id: user_id,
+                name,
+                col_no,
+                major,
+                schedule: {
+                    enter_at: new Date(Schedule.enter_at),
+                    exit_at: new Date(Schedule.exit_at)
+                },
+                mission: Mission.id,
+                push: Push?
+                {
+                    subscription: JSON.parse(Push.subscription)
+                }:
+                null
+            }
+        }
+    );
+    const connections = await Connection.findAll(
+        {
+            where: {
+                willBeValid: null
+            }
+        }
+    );
+    const immigrateConnectionsRawData = connections.map(
+        ({id, follower_id, followee_id, createdAt, expired_at})=>{
+            const toHourTime = (time)=>{
+                return new Date(time.getFullYear(), time.getMonth(), time.getDate(), time.getHours())
+            }
+            return {
+                id,
+                followerId: follower_id,
+                followeeId: followee_id,
+                createdAt,
+                expired_at: new Date(expired_at??"2024-02-05T16:00:00+09:00"),
+                validAt: toHourTime(createdAt),
+                expiredAt: toHourTime(new Date(expired_at??"2024-02-05T16:00:00+09:00"))
+            }
+        }
+    )
+    const times = 
+    [
+        ...immigrateConnectionsRawData.map(
+            ({validAt})=>validAt
+        ),
+        ...immigrateConnectionsRawData.map(
+            ({expiredAt})=>expiredAt
+        )
+    ].reduce(
+        (result, time)=>{
+            if(!result.find(
+                (found)=>{
+                    return (found-time)==0;
+                }
+            )){
+                return [...result, time];
+            }
+            return result;
+        },
+        []
+    ).sort((a, b)=>a-b)
+    .map(
+        (value, index, array)=>{
+            if(index<array.length-1){
+                return {
+                    validAt: value,
+                    expiredAt: array[index+1]
+                }
+            }
+        }
+    )
+    .filter((item)=>item);
+
+    const connectionsDocuments = times.map(
+        ({validAt, expiredAt})=>{
+            const validConnections = immigrateConnectionsRawData.filter(
+                ({expired_at, createdAt})=>{
+                    return  (createdAt<expiredAt) && (expired_at>=expiredAt);
+                }
+            )
+            return {
+                validAt,
+                expiredAt,
+                connections: validConnections.map(
+                    ({followerId, followeeId, id})=>{
+                        return {
+                            follower: followerId,
+                            followee: followeeId,
+                            id
+                        }
+                    }
+                )
+            };
+        }
+    )
+
+    const connectionIDs = 
+    Array.from(
+        new Set(
+            connectionsDocuments.reduce(
+                (result, {connections: validConnections})=>{
+                    return [...result, ...validConnections.map(({id})=>id)];
+                },
+                []
+            )
+        )
+    );
+    const excluded = immigrateConnectionsRawData.filter(
+        ({id})=>{
+            return !connectionIDs.includes(id)
+        }
+    )
+
+    //console.log(JSON.stringify(connectionsDocuments, null, '\t'));
+
+    await closeSequelize(sequelize);
+    await connectMongo();
+    await mongoDBMission.deleteMany({});
+    await mongoDBMission.create(immigrateMissions);
+    await mongoDBUser.deleteMany({});
+    await mongoDBUser.create(immigrateUsers);
+    await ConnectionDocument.deleteMany({});
+    await ConnectionDocument.create(connectionsDocuments)
+    /*const user = await mongoDBUser.findOne().populate("mission").exec();
+    console.log(user);*/
+    await disconnectMongo();
+};
+run();
