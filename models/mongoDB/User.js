@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 const ScheduleSchema = new mongoose.Schema(
     {
+        _id: false,
         enter_at: {type: Date, required: true},
         exit_at: {type: Date, required: true}
     }
@@ -9,6 +10,7 @@ const ScheduleSchema = new mongoose.Schema(
 
 const PushSchema = new mongoose.Schema(
     {
+        _id: false,
         subscription: mongoose.Schema.Types.Mixed
     }
 )
