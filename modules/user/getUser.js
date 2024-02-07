@@ -73,7 +73,6 @@ async function getUser(condition){
         };
     }
     catch(error){
-        console.log(error);
         return {error};
     }
 }
