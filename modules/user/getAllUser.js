@@ -3,6 +3,7 @@ const {User, ConnectionDocument} = require("models/mongoDB");
 const {getConnections} = require("modules/connection/module");
 const {convertDateToUnit} = require("modules/Utility/convertDate");
 const getNow = require("modules/Utility/getNow");
+const mergeConnections = require("modules/Utility/mergeConnections");
 
 async function getAllUser(at=getNow()){
     try{ 
@@ -27,22 +28,25 @@ async function getAllUser(at=getNow()){
                 title, description, difficulty
             }
         )
-        const findConnections = (userId, key)=>{
+        const findConnections = (userId, myKey, targetKey)=>{
             const relatedConnections = connections.reduce(
-                (result, {connections, expiredAt, validAt})=>{
+                (result, connectionDocument)=>{
+                    const {connections, expiredAt, validAt} = connectionDocument;
                     const userConnection = connections.find(
-                        ({[key]: target})=>{
+                        ({[myKey]: target})=>{
                             return target===userId
                         }
                     );
+                    const target = userConnection?userConnection[targetKey]:null;
                     if(userConnection){
                         return [
                             ...result,
                             {
-                                follower: userConnection.follower,
-                                followee: userConnection.followee,
-                                expiredAt,
-                                validAt
+                                start: validAt,
+                                end: expiredAt,
+                                isValid: connectionDocument.isValidAt(at),
+                                [myKey]: userId,
+                                [targetKey]: target
                             }
                         ]
                     }
@@ -52,21 +56,50 @@ async function getAllUser(at=getNow()){
                 },
                 []
             );
-            return relatedConnections.map(
-                ({follower, followee, expiredAt, validAt})=>(
+            return mergeConnections(relatedConnections)
+            .map(
+                ({[myKey]: _, [targetKey]: targetId, ...remain})=>{
+                    const targetUser = users.find(
+                        ({_id})=>_id===targetId
+                    );
+                    const restTargetUserInfo = (
+                        (user)=>{
+                            if(user){
+                                const {name, col_no, major, mission} = user;
+                                return {name, col_no, major, mission};
+                            }
+                            return {};
+                        }
+                    )(targetUser);
+                    return {
+                        user_info: {
+                            user_id: targetId,
+                            ...restTargetUserInfo
+                        },
+                        ...remain
+                    }
+                }
+            ).map(
+                ({start, end, ...rest})=>(
                     {
-                        follower, followee, expiredAt, validAt
+                        ...rest,
+                        start_at: start,
+                        expired_at: end,
+                        start: convertDateToUnit(start),
+                        end: convertDateToUnit(end)
                     }
                 )
             )
         }
+
         return {
             users: users.map(
                 (user)=>{
                     return {
                         ...userDistributables(user),
                         mission: missionDistributables(user.mission),
-                        following: findConnections(user._id, "follower")
+                        following: findConnections(user._id, "follower", "followee"),
+                        followed: findConnections(user._id, "followee", "follower")
                     }
                 }
             )

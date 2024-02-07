@@ -1,6 +1,7 @@
 const {connect: connectMongo} = require("modules/mongoose");
 const {User} = require("models/mongoDB");
 const {getConnections} = require("modules/connection/module");
+const mergeConnections = require("modules/Utility/mergeConnections");
 
 async function getUser(condition){
     try{
@@ -22,40 +23,25 @@ async function getUser(condition){
         }
         const connections = await getConnections({expired: true});
 
-        const followingsPromise = connections.sort(
-            (a, b)=>a.validAt-b.validAt
-        ).reduce(
-            (result, connectionDocument)=>{
-                const myConnection = connectionDocument.connections.find(
-                    ({follower})=>follower===user.user_id
-                )
-                if(!myConnection){
-                    return result;
-                }
-                const lastConnection = result[result.length-1];
-                if(lastConnection?.followee === myConnection.followee){
-                    return [
-                        ...result.slice(0, result.length-1),
-                        {
-                            followee: myConnection.followee,
-                            start: lastConnection.start,
-                            end: connectionDocument.expiredAt,
-                            isValid: connectionDocument.isValidAt()
-                        }
-                    ]
-                }
-                return [
-                    ...result, 
-                    {
-                        followee: myConnection.followee,
-                        start: connectionDocument.validAt,
-                        end: connectionDocument.expiredAt,
+        const followingsPromise = mergeConnections(
+            connections
+            .map(
+                (connectionDocument)=>{
+                    const {connections, validAt, expiredAt} = connectionDocument;
+                    const myConnection = connections.find(
+                        ({follower})=>follower===user.user_id
+                    );
+                    return {
+                        start: validAt,
+                        end: expiredAt,
+                        follower: user.user_id,
+                        followee: myConnection?myConnection.followee:null,
                         isValid: connectionDocument.isValidAt()
                     }
-                ]
-            },
-            []
-        ).map(
+                }
+            )
+        )
+        .map(
             async ({followee: followee_id, start, end, isValid})=>{
                 const followee = await User.findById(followee_id);
                 if(followee){
@@ -87,6 +73,7 @@ async function getUser(condition){
         };
     }
     catch(error){
+        console.log(error);
         return {error};
     }
 }

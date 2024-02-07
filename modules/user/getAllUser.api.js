@@ -26,7 +26,6 @@ function attachGetAllUser(app){
                     }
                 }
                 catch(error){
-                    console.error(error);
                     return {
                         result: Result.fail,
                         error: error.message

@@ -17,7 +17,13 @@ async function getConnections(include = {}, at=getNow()){
                 $gt: at
             }
         }
-        return await ConnectionDocument.find(filter).exec();
+        const result = await ConnectionDocument.find(filter).exec();
+        console.assert(result.every(
+            ({validAt, expiredAt})=>{
+                return validAt<=expiredAt;
+            }
+        ))
+        return result;
     }
     catch(error){
         return {

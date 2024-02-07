@@ -5,5 +5,5 @@ test("getAllUser", async()=>{
     if(error){
         throw error;
     }
-    console.log(JSON.stringify(users, null, "\t"));
+    //console.log(JSON.stringify(users, null, "\t"));
 });
