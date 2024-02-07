@@ -1,33 +1,15 @@
-const defineModels = require("models");
-const {createSequelize, closeSequelize} = require("modules/sequelize");
+const {connect} = require("modules/mongoose");
+const {Mission} = require("models/mongoDB");
 
-async function getMissionList(loadedSequelize = null){
-    const sequelize = (loadedSequelize || (await createSequelize()).sequelize);
+async function getMissionList(filter={}){
     try{
-        const DataTypes = sequelize.Sequelize.DataTypes;
-        const {Mission} = defineModels(sequelize, DataTypes);
-        const missions = 
-        (
-            await Mission.findAll(
-                {
-                    attributes: [
-                        "id", "title", "difficulty", "description", "maximum",
-                        [sequelize.fn('COUNT', sequelize.col('User.user_id')), "n_users"]
-                    ],
-                    include: [
-                        {
-                            model: Mission.User,
-                            attributes: []
-                        }
-                    ],
-                    group: [sequelize.col('Mission.id')]
-                }
-            )
-        ).map(
-            ({dataValues:{id, title, difficulty, description, maximum, n_users}})=>{
+        await connect();
+        const missions = (await Mission.find(filter).populate("nUsers"))
+        .map(
+            ({_id, title, difficulty, description, maximum, nUsers})=>{
                 return {
-                    id, title, difficulty, description, maximum,
-                    n_users: Number(n_users)
+                    _id, title, difficulty, description, maximum,
+                    nUsers
                 }
             }
         )
@@ -39,10 +21,6 @@ async function getMissionList(loadedSequelize = null){
         return {
             error
         }
-    }
-    finally{
-        if(!loadedSequelize)
-            await closeSequelize(sequelize);
     }
 }
 

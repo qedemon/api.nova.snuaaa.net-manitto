@@ -1,48 +1,76 @@
-const {createSequelize, closeSequelize} = require("modules/sequelize");
-const defineModels = require("models");
+const {connect: connectMongo} = require("modules/mongoose");
+const {User} = require("models/mongoDB");
+const {getConnections} = require("modules/connection/module");
 
-async function getUser(condition, loadedSequelize=null){
-    const sequelize = (loadedSequelize || (await createSequelize()).sequelize);
-    const Models = defineModels(sequelize, sequelize.Sequelize.DataTypes);
-    const User = Models.User;
-    const Connection = Models.Connection;
-    const Schedule = Models.Schedule;
-    const Mission = Models.Mission;
+async function getUser(condition){
     try{
-        const users = await User.findAll(
-            {
-                include: [
-                    {
-                        model: Connection,
-                        as: "Following",
-                        include: {
-                            model: User,
-                            as: "Followee",
-                            attributes: ["name", "col_no", "major"],
-                            include: [
-                                Schedule
-                            ]
-                        },
-                    },
-                    {
-                        model: Schedule
-                    },
-                    {
-                        model: Mission,
-                        attributes: [
-                            ["id", "mission_id"], "title", "description", "difficulty"
-                        ]
-                    }
-                ],
-                where: condition,
+        const connection = await connectMongo();
+        const transformedCondition = (
+            (condition)=>{
+                const {user_id, ...rest} = condition;
+                return (user_id!==undefined)?
+                {
+                    ...rest,
+                    _id: user_id
+                }:
+                condition
             }
-        )
-        const [user] = users;
-        
+        )(condition);
+        const user = await User.findOne(transformedCondition).populate("mission").exec();
+        if(!user){
+            throw new Error("no user");
+        }
+        const connections = await getConnections({expired: true});
+
+        const followingsPromise = connections.sort(
+            (a, b)=>a.validAt-b.validAt
+        ).reduce(
+            (result, connectionDocument)=>{
+                const myConnection = connectionDocument.connections.find(
+                    ({follower})=>follower===user.user_id
+                )
+                if(!myConnection){
+                    return result;
+                }
+                const lastConnection = result[result.length-1];
+                if(lastConnection?.followee === myConnection.followee){
+                    return [
+                        ...result.slice(0, result.length-1),
+                        {
+                            followee: myConnection.followee,
+                            start: lastConnection.start,
+                            end: connectionDocument.expiredAt,
+                            isValid: connectionDocument.isValidAt()
+                        }
+                    ]
+                }
+                return [
+                    ...result, 
+                    {
+                        followee: myConnection.followee,
+                        start: connectionDocument.validAt,
+                        end: connectionDocument.expiredAt,
+                        isValid: connectionDocument.isValidAt()
+                    }
+                ]
+            },
+            []
+        ).map(
+            async ({followee: followee_id, start, end, isValid})=>{
+                const followee = await User.findById(followee_id);
+                if(followee){
+                    const {name, col_no, major, schedule} = followee
+                    return {
+                        name, col_no, major, exit_at: schedule?.exit_at, start, end, isValid
+                    }
+                }
+            }
+        );
+        const followings = await Promise.all(followingsPromise);
         return {
             user:
                 (
-                    ({user_id, name, id, col_no, isAdmin, major, Following, Schedule, Mission})=>{
+                    ({user_id, name, id, col_no, isAdmin, major, schedule, mission})=>{
                         return {
                             user_id,
                             name,
@@ -50,32 +78,16 @@ async function getUser(condition, loadedSequelize=null){
                             col_no,
                             major,
                             isAdmin,
-                            following: Following.map(
-                                ({Followee, expired_at, isValid})=>{
-                                    if(Followee){
-                                        const {name, col_no, major, Schedule} = Followee;
-                                        return {name, col_no, major, expired_at, isValid, exit_at: Schedule?.exit_at};
-                                    }
-                                    else{
-                                        return undefined;
-                                    }
-                                }
-                            ).filter(item=>item),
-                            Schedule,
-                            Mission
+                            Following: followings,
+                            Schedule: schedule,
+                            Mission: mission
                         }
                     }
                 )(user),
-            users
         };
     }
     catch(error){
-        console.error(error);
         return {error};
-    }
-    finally{
-        if(loadedSequelize === null)
-            await closeSequelize(sequelize);
     }
 }
 

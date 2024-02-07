@@ -1,50 +1,17 @@
-const {createSequelize, closeSequelize} = require("modules/sequelize");
-const defineModels = require("models");
+const {connect} = require("modules/mongoose");
+const {Policy} = require("models/mongoDB");
 
-async function setPolicies(name, value, loadedSequelize = null){
-    const sequelize = loadedSequelize || (await createSequelize()).sequelize;
-    const Sequelize = sequelize.Sequelize;
+async function setPolicies(policies){
     try{
-        const {Policy} = defineModels(sequelize, Sequelize.DataTypes);
-        const [updated] = await Policy.update(
-            {
-                value: value.toString()
-            },
-            {
-                where: {
-                    name: name
-                }
-            }
-        )
-        if(updated<1){
-            throw new Error("update policy error");
-        }
-        const policy = await Policy.findOne(
-            {
-                where: {
-                    name: name
-                }
-            }
-        );
-
+        await connect();
+        await Policy.updateOne({}, policies, {upsert: true});
         return {
-            policy: (
-                ({name, value})=>{
-                    return {
-                        name, value:eval(value)
-                    }
-                }
-            )(policy)
-        };
+            policies: (await Policy.findOne({})).distributables()
+        }
     }
     catch(error){
         return {
             error
-        }
-    }
-    finally{
-        if(loadedSequelize === null){
-            closeSequelize(sequelize);
         }
     }
 }

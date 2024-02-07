@@ -11,7 +11,7 @@ function attachGetAllUser(app){
             async ()=>{
                 try{
                     const isAdmin = req.authorization?.userInfo?.isAdmin;
-                    const policyValue = req.policy?.policies?.find(({name})=>name==="SHOW_FOLLOWER")?.value;
+                    const policyValue = req.policy?.policies?.SHOW_FOLLOWER;
                     if(isAdmin || policyValue){
                         const {error, users} = await getAllUser();
                         if(error)

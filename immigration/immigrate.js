@@ -2,7 +2,7 @@ require("dotenv").config();
 const {createSequelize, closeSequelize} = require("modules/sequelize");
 const defineModels = require("models");
 const {connect: connectMongo, disconnect: disconnectMongo} = require("modules/mongoose");
-const { User: mongoDBUser, Mission: mongoDBMission, ConnectionDocument} = require("models/mongoDB");
+const { User: mongoDBUser, Mission: mongoDBMission, ConnectionDocument, Policy} = require("models/mongoDB");
 
 const run = async ()=>{
     const {sequelize} = await createSequelize();
@@ -10,19 +10,17 @@ const run = async ()=>{
     const {Connection, User, Schedule, Push, Mission} = defineModels(sequelize, Sequelize.DataTypes);
     const missions = await Mission.findAll();
     const immigrateMissions = missions.map(
-        ({id, title, description, difficulty})=>{
+        ({id, title, description, difficulty, maximum})=>{
             return {
                 _id: id,
-                title, description, difficulty
+                title, description, difficulty,
+                maximum: 10
             }
         }
     )
     const users = await (
         User.findAll(
             {
-                where: {
-                    isAdmin: false
-                },
                 include: [
                     Schedule,
                     Push,
@@ -32,10 +30,12 @@ const run = async ()=>{
         )
     );
     const immigrateUsers = users.map(
-        ({user_id, name, col_no, major, Schedule, Push, Mission})=>{
+        ({user_id, isAdmin, id, name, col_no, major, Schedule, Push, Mission})=>{
             return {
                 _id: user_id,
+                isAdmin,
                 name,
+                id,
                 col_no,
                 major,
                 schedule: {
@@ -157,8 +157,13 @@ const run = async ()=>{
     await mongoDBUser.create(immigrateUsers);
     await ConnectionDocument.deleteMany({});
     await ConnectionDocument.create(connectionsDocuments)
-    /*const user = await mongoDBUser.findOne().populate("mission").exec();
-    console.log(user);*/
+    await Policy.deleteMany({});
+    await Policy.create(
+        {
+            SHOW_FOLLOWEE: false,
+            SHOW_FOLLOWER: false
+        }
+    )
     await disconnectMongo();
 };
 run();

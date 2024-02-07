@@ -3,7 +3,7 @@ const defineModels = require("models");
 const {convertDateToUnit} = require("modules/Utility/convertDate");
 const getNow = require("modules/Utility/getNow");
 
-async function getAllUser(loadedSequelize=null){
+async function getAllUser(at=getNow()){
     const sequelize = (loadedSequelize || (await createSequelize()).sequelize);
     const Models = defineModels(sequelize, sequelize.Sequelize.DataTypes);
     const User = Models.User;
