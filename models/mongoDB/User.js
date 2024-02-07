@@ -26,7 +26,7 @@ const UserSchema = new mongoose.Schema(
         _id: Number,
         name: String,
         id: String,
-        isAdmin: Boolean,
+        isAdmin: {type: Boolean, default: false},
         col_no: {type: String, default: "23"},
         major: {type: String, default: "아마추어천문학과"},
         schedule: ScheduleSchema,
