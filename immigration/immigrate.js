@@ -146,24 +146,27 @@ const run = async ()=>{
             return !connectionIDs.includes(id)
         }
     )
-
-    //console.log(JSON.stringify(connectionsDocuments, null, '\t'));
-
+    
     await closeSequelize(sequelize);
-    await connectMongo();
-    await mongoDBMission.deleteMany({});
-    await mongoDBMission.create(immigrateMissions);
-    await mongoDBUser.deleteMany({});
-    await mongoDBUser.create(immigrateUsers);
-    await ConnectionDocument.deleteMany({});
-    await ConnectionDocument.create(connectionsDocuments)
-    await Policy.deleteMany({});
-    await Policy.create(
-        {
-            SHOW_FOLLOWEE: false,
-            SHOW_FOLLOWER: false
-        }
-    )
-    await disconnectMongo();
+
+    if(process.argv.includes("import")){
+        console.log("import to MongoDB");
+        await connectMongo();
+        await mongoDBMission.deleteMany({});
+        await mongoDBMission.create(immigrateMissions);
+        await mongoDBUser.deleteMany({});
+        await mongoDBUser.create(immigrateUsers);
+        await ConnectionDocument.deleteMany({});
+        await ConnectionDocument.create(connectionsDocuments)
+        await Policy.deleteMany({});
+        await Policy.create(
+            {
+                SHOW_FOLLOWEE: false,
+                SHOW_FOLLOWER: false
+            }
+        )
+        await disconnectMongo();
+    }
+    
 };
 run();
