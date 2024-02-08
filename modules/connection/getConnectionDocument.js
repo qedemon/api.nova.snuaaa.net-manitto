@@ -94,7 +94,7 @@ async function getConnectionDocument(targetSessionNo, at=getNow()){
         
         return {
             data: {
-                editable: targetSession>sessionFrom.sessionNo,
+                editable: targetSessionNo>=sessionFrom.sessionNo,
                 current: targetSessionNo===sessionFrom.sessionNo,
                 disconnected,
                 connected,
