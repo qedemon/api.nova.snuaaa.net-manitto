@@ -1,142 +1,103 @@
-const {createSequelize, closeSequelize} = require("modules/sequelize");
-const defineModel = require("models");
+const {connect, disconnect} = require("modules/mongoose");
+const {User} = require("models/mongoDB");
+const getConnections = require("./getConnections");
 const {convertDateToUnit, convertUnitToDate} = require("modules/Utility/convertDate");
-const getToday = require("modules/Utility/getToday");
+const getNow = require("modules/Utility/getNow");
 const getConnectionGroups = require("modules/Utility/connectionGroups");
+const {sessions, convertDateToSession} = require("modules/Utility/Session");
 
-async function getConnectionDocument(day, loadedSequelize=null, today=getToday()){
-    const sequelize = loadedSequelize || (await createSequelize()).sequelize;
-    const Sequelize = sequelize.Sequelize;
-    const {DataTypes, Op} = Sequelize;
+async function getConnectionDocument(targetSessionNo, at=getNow()){
     try{
-        const {User, Connection, Schedule} = defineModel(sequelize, DataTypes);
-        const [disconnected, connectedUsers] = (await User.findAll(
-            {
-                where: {
-                    isAdmin: false
-                },
-                include: [
-                    {
-                        model: Connection,
-                        as: "Following"
-                    },
-                    {
-                        model: Connection,
-                        as: "Followed"
-                    },
-                    Schedule
+        const sessionFrom=convertDateToSession(at);
+        const targetSession = sessions[targetSessionNo];
+        const connections = ( 
+            await (
+                (targetSession, sessionFrom)=>{
+                    if(targetSession.sessionNo<sessionFrom.sessionNo){
+                        return getConnections({},targetSession.session.endAt)
+                    }
+                    else if(targetSession.sessionNo===sessionFrom.sessionNo){
+                        return getConnections({}, at);
+                    }
+                    else{
+                        return getConnections({}, targetSession.session.startAt)
+                    }
+                }
+            )({sessionNo:targetSessionNo, session: targetSession}, sessionFrom)
+        )[0]
+        .connections.map(({follower, followee})=>({follower_id: follower, followee_id: followee}));
+
+        const connectedIds = Array.from(
+            new Set(
+                [
+                    ...connections.map(({follower_id})=>follower_id),
+                    ...connections.map(({followee_id})=>followee_id)
                 ]
-            }
-        ))
-        .map(
-            (user)=>{
-                user.schedule= (
-                    (Schedule)=>{
-                        return !Schedule?null:
-                        {
-                            enter_at: convertDateToUnit(new Date(Schedule.enter_at)),
-                            exit_at: convertDateToUnit(new Date(Schedule.exit_at))
-                        }
-                    }
-                )(user.Schedule);
-                return user;
-            }
-        )
-        .filter(
-            ({schedule})=>{
-                return schedule && (
-                    ({enter_at, exit_at})=>{
-                        return (enter_at.major<=day && day<=exit_at.major) && (enter_at.major<=today)
-                    }
-                )(schedule)
-            }
-        )
-        .reduce(
-            ([disconnected, connected], user)=>{
-                const {Following, Followed} = user;
-                const isDisconnected =  [Following, Followed].every(
-                    (connections)=>{
-                        return connections.filter(
-                            (connectionInfo)=>{
-                                const connection = Connection.build(connectionInfo.dataValues);
-                                const {isValid, willBeValid, expired_at} = connection;
-                                if(day<today){
-                                    return isValid || convertDateToUnit(expired_at).major>day;
-                                }
-                                if(day>today){
-                                    return willBeValid===day;
-                                }
-                                return isValid;
-                            }
-                        ).length === 0;
-                    }
-                );
-                return isDisconnected?
-                    [[...disconnected, user], connected]:
-                    [disconnected, [...connected, user]]
-            },
-            [[], []]
+            )
         );
-        const connections = connectedUsers.map(
-            ({Following, user_id})=>{
-                const validFollowing = (
-                    (connections)=>{
-                        const willBeValid = connections.find(({willBeValid})=>willBeValid===day);
-                        if(day>today){
-                            return willBeValid;
-                        }
-                        const isValid = connections.find(({isValid})=>isValid);
-                        if(day===today){
-                            return isValid;
-                        }
-                        
-                        return connections
-                        .filter(
-                            ({isValid, expired_at})=>{
-                                return isValid || convertDateToUnit(expired_at).major>day;
-                            }
-                        )
-                        .sort(
-                            (a, b)=>{
-                                if(a.expired_at===null){
-                                    return -1;
-                                }
-                                if(b.expired_at===null){
-                                    return 1;
-                                }
-                                const A = new Date(a.expired_at);
-                                const B = new Date(b.expired_at);
-                                if(B>A){
-                                    return 1;
-                                }
-                                if(A>B){
-                                    return -1;
-                                }
-                                return 0;
-                            }
-                        )[0];
-                    }
-                )(Following.map(connectionInfo=>Connection.build(connectionInfo.dataValues)));
-                return {
-                    follower_id: user_id,
-                    followee_id: validFollowing?.followee_id??null
+
+        const userDistributables = ({_id:user_id, col_no, major, name, schedule})=>{
+            return {
+                user_id,
+                col_no,
+                major,
+                name,
+                schedule: {
+                    enter_at: convertDateToUnit(schedule.enter_at),
+                    exit_at: convertDateToUnit(schedule.exit_at)
                 }
             }
-        );
-        const connectionGroups = getConnectionGroups(connections);
+        };
 
+        const connected = (
+            await Promise.all(
+                connectedIds.map(
+                    (userId)=>{
+                        return User.findById(userId).exec()
+                    }
+                )
+            )
+        ).map(
+            userDistributables
+        );
+        const shouldBeConnected = await User.find(
+            (
+                (targetSession)=>{
+                    const filter = {
+                        isAdmin: false
+                    };
+                    if(targetSession.endAt){
+                        filter["schedule.enter_at"]={
+                            $lte: targetSession.endAt
+                        }
+                    }
+                    if(targetSession.startAt){
+                        filter["schedule.exit_at"]={
+                            $gte: targetSession.startAt
+                        }
+                    }
+                    return filter;
+                }
+            )(targetSession)
+        );
+        const disconnected = shouldBeConnected.filter(
+            ({_id: targetId})=>{
+                return !connected.some(
+                    ({user_id})=>{
+                        return user_id===targetId
+                    }
+                )
+            }
+        ).map(userDistributables);
+
+        const connectionGroups = getConnectionGroups(connections);
+        
         return {
             data: {
-                disconnected: disconnected.map(
-                    ({user_id, col_no, major, name, schedule})=>{
-                        return {user_id, col_no, major, name, schedule};
-                    }
-                ),
-                connected: connectedUsers.map(
-                    ({user_id, col_no, major, name, schedule})=>{
-                        return {user_id, col_no, major, name, schedule};
-                    }
-                ),
+                editable: targetSession>sessionFrom.sessionNo,
+                current: targetSessionNo===sessionFrom.sessionNo,
+                disconnected,
+                connected,
                 connectionGroups
             }
         }
@@ -145,11 +106,6 @@ async function getConnectionDocument(day, loadedSequelize=null, today=getToday()
         console.error(error);
         return {
             error
-        }
-    }
-    finally{
-        if(loadedSequelize===null){
-            await closeSequelize(sequelize);
         }
     }
 }

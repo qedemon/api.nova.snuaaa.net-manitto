@@ -21,7 +21,8 @@
     "dataInstall": "NODE_PATH=. node install/install.js",
     "testCase": "NODE_PATH=. node install/test_case.js",
     "test": "NODE_PATH=. jest",
-    "immigrate": "NODE_PATH=. node immigration/immigrate.js"
+    "immigrate": "NODE_PATH=. node immigration/immigrate.js",
+    "push": "NODE_PATH=. node push.js"
   },
   "keywords": [],
   "author": "",
