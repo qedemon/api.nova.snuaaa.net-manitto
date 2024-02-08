@@ -1,37 +1,20 @@
-const {createSequelize, closeSequelize} = require("modules/sequelize");
-const defineModel = require("models");
-const getUser = require("./getUser");
+const {connect} = require("modules/mongoose");
+const {User} = require("models/mongoDB");
+const {getMissionList} = require("modules/mission/module");
 
 async function registerUser(user_info){
-    const {sequelize} = await createSequelize();
-
     try{
-        const Model = defineModel(sequelize, sequelize.Sequelize.DataTypes);
-        const User = Model.User;
-        const Mission = Model.Mission;
-        const user = await User.findOne(
-            {
-                where:{
-                    user_id: user_info.user_id
-                }
-            }
-        );
+        await connect();
+        const user = await User.findById(user_info.user_id);
         if(user){
             throw new Error("alread exists");
         }
-        
         const mission_difficulty = user_info.mission_difficulty;
-        const missions = await Mission.findAll(
-            {
-                where: {
-                    difficulty: mission_difficulty
-                }
-            }
-        );
-        if(missions.length<=0){
+        const {missions} = await getMissionList({difficulty: mission_difficulty});
+        if(!missions?.length){
             throw new Error(`there is no mission with the difficulty ${mission_difficulty}`);
         }
-        const selected_mission = missions[
+        const selectedMission = missions[
             (
                 (min, max)=>{
                     min = Math.ceil(min);
@@ -40,53 +23,29 @@ async function registerUser(user_info){
                 }
             )(0, missions.length)
         ];
-
         const regiteredUser = await User.create(
             {
-                user_id: user_info.user_id,
+                _id: user_info.user_id,
                 name: user_info.name,
                 col_no: user_info.col_no===""?"23":user_info.col_no,
                 major: user_info.major===""?"아마추어천문학과":user_info.major,
                 id: user_info.id,
-                Schedule: {
+                schedule: {
                     enter_at: user_info.enter_at,
                     exit_at: user_info.exit_at
                 },
-            },
-            {
-                include: [
-                    User.Schedule
-                ]
+                mission: selectedMission._id
             }
         );
-        try{
-            await regiteredUser.setMission(selected_mission);
-            const {user: reloadedUser, error} = await getUser({user_id: regiteredUser.user_id});
-            if(error){
-                throw error;
-            }
-            return {
-                user: reloadedUser
-            }
-        }
-        catch(error){
-            await User.destroy(
-                {
-                    where: {
-                        user_id: regiteredUser.user_id
-                    }
-                }
-            );
-            throw error;
+        await regiteredUser.populate("mission")
+        return {
+            user: regiteredUser
         }
     }
     catch(error){
         return {
             error: error
         }
-    }
-    finally{
-        closeSequelize(sequelize);
     }
 }
 

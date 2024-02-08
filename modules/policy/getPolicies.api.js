@@ -16,15 +16,7 @@ function attachGetPolicies(app){
         res.json(
             {
                 result: Result.success,
-                policies: policies.reduce(
-                    (result, {name, value})=>{
-                        return {
-                            ...result,
-                            [name]: value
-                        }
-                    },
-                    {}
-                )
+                policies
             }
         )
     });

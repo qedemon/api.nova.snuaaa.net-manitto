@@ -11,43 +11,14 @@ function attachSetPolicy(app){
             if(!req.authorization?.userInfo?.isAdmin){
                 throw new Error(`unauthorized user ${req.authorization?.userInfo?.name}`);
             }
-            const policies = Object.entries(req.body).map(
-                ([key, value])=>{
-                    return {
-                        name: key,
-                        value
-                    }
-                }
-            )
-            const {policy, error} = await policies.reduce(
-                async (last, {name, value})=>{
-                    const {policy:lastPolicy, error: lastError}  = await last;
-                    if(lastError){
-                        return {
-                            policy: lastPolicy,
-                            error: lastError
-                        }
-                    }
-                    const {policy, error} = await setPolicy(name, value);
-                    return {
-                        policy: {
-                            ...lastPolicy,
-                            ...{
-                                [policy.name]: policy.value
-                            }
-                        },
-                        error
-                    };
-                },
-                Promise.resolve({policy:{}})
-            )
+            const requiredPolicies = req.body;
+            const {error, policies} = setPolicy(requiredPolicies);
             if(error)
                 throw error;
-            
             res.json(
                 {
                     result: Result.success,
-                    policy
+                    policy: policies
                 }
             )
         }

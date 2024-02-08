@@ -1,15 +1,12 @@
-const {createSequelize, closeSequelize} = require("modules/sequelize");
-const defineModels = require("models");
+const {connect} = require("modules/mongoose");
+const {User} = require("models/mongoDB");
 
-async function deleteUser(user_id, loadedSequelize=null){
-    const sequelize = (loadedSequelize || (await createSequelize()).sequelize);
+async function deleteUser(user_id){
     try{
-        const {User} = defineModels(sequelize, sequelize.Sequelize.DataTypes);
-        const destroyed = await User.destroy(
+        await connect();
+        const destroyed = await User.deleteOne(
             {
-                where: {
-                    user_id: user_id
-                }
+                _id: user_id
             }
         );
         if(destroyed<=0){
@@ -22,11 +19,6 @@ async function deleteUser(user_id, loadedSequelize=null){
     catch(error){
         return {
             error
-        }
-    }
-    finally{
-        if(loadedSequelize === null){
-            closeSequelize(sequelize);
         }
     }
 }

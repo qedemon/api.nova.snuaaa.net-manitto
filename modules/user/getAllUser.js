@@ -1,161 +1,105 @@
-const {createSequelize, closeSequelize} = require("modules/sequelize");
-const defineModels = require("models");
+const {connect} = require("modules/mongoose");
+const {User, ConnectionDocument} = require("models/mongoDB");
+const {getConnections} = require("modules/connection/module");
 const {convertDateToUnit} = require("modules/Utility/convertDate");
 const getNow = require("modules/Utility/getNow");
+const mergeConnections = require("modules/Utility/mergeConnections");
 
-async function getAllUser(loadedSequelize=null){
-    const sequelize = (loadedSequelize || (await createSequelize()).sequelize);
-    const Models = defineModels(sequelize, sequelize.Sequelize.DataTypes);
-    const User = Models.User;
-    const Connection = Models.Connection;
-    const Mission = Models.Mission;
-    const Schedule = Models.Schedule;
+async function getAllUser(at=getNow()){
     try{ 
-        const users = await User.findAll(
+        await connect();
+        const users = await User.find(
             {
-                where: {
-                    isAdmin: false
-                },
-                attributes: [
-                    'user_id',
-                    'name',
-                    'col_no',
-                    'major',
-                ],
-                include: [
-                    {
-                        model: Mission,
-                        attributes: ["title", "description", "difficulty"]
-                    },
-                    {
-                        model: Schedule,
-                        attributes: ["enter_at", "exit_at"]
-                    },
-                    {
-                        model: Connection,
-                        as: "Following",
-                        include: {
-                            model: User,
-                            as: "Followee",
-                            include: Mission
-                        },
-                    },
-                    {
-                        model: Connection,
-                        as: "Followed",
-                        include: {
-                            model: User,
-                            as: "Follower",
-                            include: Mission
-                        },
-                    },
-                ]
+                isAdmin: false
             }
-        );
-
-        const filterUser = ({user_id, name, col_no, major})=>{
+        ).populate("mission");
+        const connections = await getConnections({expired: true});
+        const userDistributables = ({_id, name, col_no, major, schedule})=>{
             return {
-                user_id, name, col_no, major
+                user_id: _id,
+                name,
+                col_no,
+                major,
+                schedule
             }
         };
-        const filterMission = ({mission_id, title, description, difficulty})=>{
-            return {
-                mission_id, title, description, difficulty
-            };
-        };
-        const filterConnection = ({connection, userKey})=>{
-            return {
-                user_info: {
-                    ...filterUser(connection[userKey]), 
-                    mission: (
-                        (Mission)=>{
-                            return Mission?filterMission(Mission):{};
+        const missionDistributables = ({title, description, difficulty})=>(
+            {
+                title, description, difficulty
+            }
+        )
+        const findConnections = (userId, myKey, targetKey)=>{
+            const relatedConnections = connections.reduce(
+                (result, connectionDocument)=>{
+                    const {connections, expiredAt, validAt} = connectionDocument;
+                    const userConnection = connections.find(
+                        ({[myKey]: target})=>{
+                            return target===userId
                         }
-                    )(connection[userKey].Mission)
+                    );
+                    const target = userConnection?userConnection[targetKey]:null;
+                    if(userConnection){
+                        return [
+                            ...result,
+                            {
+                                start: validAt,
+                                end: expiredAt,
+                                isValid: connectionDocument.isValidAt(at),
+                                [myKey]: userId,
+                                [targetKey]: target
+                            }
+                        ]
+                    }
+                    else{
+                        return result;
+                    }
                 },
-                expired_at: connection.expired_at,
-                isValid: connection.isValid,
-                willBeValid: connection.willBeValid
-            }
-        };
-        const filterSchedule = ({enter_at, exit_at})=>{
-            return {
-                enter_at,
-                exit_at
-            }
-        };
+                []
+            );
+            return mergeConnections(relatedConnections)
+            .map(
+                ({[myKey]: _, [targetKey]: targetId, ...remain})=>{
+                    const targetUser = users.find(
+                        ({_id})=>_id===targetId
+                    );
+                    const restTargetUserInfo = (
+                        (user)=>{
+                            if(user){
+                                const {name, col_no, major, mission} = user;
+                                return {name, col_no, major, mission};
+                            }
+                            return {};
+                        }
+                    )(targetUser);
+                    return {
+                        user_info: {
+                            user_id: targetId,
+                            ...restTargetUserInfo
+                        },
+                        ...remain
+                    }
+                }
+            ).map(
+                ({start, end, ...rest})=>(
+                    {
+                        ...rest,
+                        start_at: start,
+                        expired_at: end,
+                        start: convertDateToUnit(start),
+                        end: convertDateToUnit(end)
+                    }
+                )
+            )
+        }
+
         return {
             users: users.map(
                 (user)=>{
-                    const mission = (
-                        (mission)=>{
-                            return mission?filterMission(mission):{};
-                        }
-                    )(user.Mission);
-                    const [following, followed] = [{connections: user.Following, userKey: "Followee"}, {connections: user.Followed, userKey: "Follower"}].map(
-                        ({connections, userKey})=>{
-                            return connections?
-                                connections
-                                .sort(
-                                    (a, b)=>{
-                                        if(a.expired_at === null){
-                                            return 1;
-                                        }
-                                        if(b.expired_at === null){
-                                            return -1;
-                                        }
-                                        if(a.expired_at<b.expired_at){
-                                            return -1;
-                                        }
-                                        if(a.expired_at>b.expired_at){
-                                            return 1;
-                                        }
-                                        return 0;
-                                    }
-                                )
-                                .filter(({willBeValid})=>{
-                                    return willBeValid===null;
-                                })
-                                .map((connection)=>{return {connection, userKey}})
-                                .map(filterConnection)
-                                .reduce(
-                                    ({lastStart, connections}, connection)=>{
-                                        return {
-                                            lastStart: connection.expired_at,
-                                            connections: [
-                                                ...connections,
-                                                {
-                                                    ...connection,
-                                                    start_at: lastStart
-                                                }
-                                            ]
-                                        }
-                                    },
-                                    {lastStart: user.Schedule.enter_at, connections:[]}
-                                ).connections
-                                .map(
-                                    (connection)=>{
-                                        return {
-                                            ...connection,
-                                            start: convertDateToUnit(new Date(connection.start_at)),
-                                            end: connection.expired_at?convertDateToUnit(new Date(connection.expired_at)):convertDateToUnit(getNow())
-                                        }
-                                    }
-                                )
-                                :[];
-                        }
-                    );
-                    const schedule = (
-                        (schedule)=>{
-                            return schedule?filterSchedule(schedule):{};
-                        }
-                    )(user.Schedule);
                     return {
-                        ...filterUser(user),
-                        mission,
-                        following,
-                        followed,
-                        schedule
+                        ...userDistributables(user),
+                        mission: missionDistributables(user.mission),
+                        following: findConnections(user._id, "follower", "followee"),
+                        followed: findConnections(user._id, "followee", "follower")
                     }
                 }
             )
@@ -163,10 +107,6 @@ async function getAllUser(loadedSequelize=null){
     }
     catch(error){
         return {error};
-    }
-    finally{
-        if(loadedSequelize === null)
-            await closeSequelize(sequelize);
     }
 }
 

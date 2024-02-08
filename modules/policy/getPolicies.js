@@ -1,31 +1,17 @@
-const {createSequelize, closeSequelize} = require("modules/sequelize");
-const defineModels = require("models");
+const {connect} = require("modules/mongoose");
+const {Policy} = require("models/mongoDB");
 
-async function getPolicies(loadedSequelize = null){
-    const sequelize = loadedSequelize || (await createSequelize()).sequelize;
-    const Sequelize = sequelize.Sequelize;
+async function getPolicies(){
     try{
-        const {Policy} = defineModels(sequelize, Sequelize.DataTypes);
-        const policies = await Policy.findAll();
+        await connect();
+        const policy = await Policy.findOne().exec();
         return {
-            policies: policies.map(
-                ({name, value})=>{
-                    return {
-                        name,
-                        value: eval(value)
-                    }
-                }
-            )
-        };
+            policies: policy.distributables()
+        }
     }
     catch(error){
         return {
             error
-        }
-    }
-    finally{
-        if(loadedSequelize === null){
-            closeSequelize(sequelize);
         }
     }
 }

@@ -19,7 +19,7 @@ async function authorize(token){
         const res = await fetch(`${remoteAPIHost}/api/userinfo`, options);
         const {success, CODE, userInfo:remoteUserInfo} = await res.json();
         if(success){
-            const {user: userInfo, error} = await getUser({user_id: remoteUserInfo.user_id});
+            const {user: userInfo} = await getUser({user_id: remoteUserInfo.user_id});
             if(userInfo){
                 return {
                     authorized: true,
