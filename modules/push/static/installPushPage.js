@@ -43,12 +43,13 @@ async function run(){
                 return userInfo
             }
         )();
-        const permission = await Notification.requestPermission();
+        /*const permission = await Notification.requestPermission();
         if(permission === "denied"){
             throw new Error("permission denied");
-        }
+        }*/
 
-        const registration = await navigator.serviceWorker.register("serviceworker.js");
+        await navigator.serviceWorker.register("serviceworker.js");
+        const registration = await navigator.serviceWorker.ready;
         const pushSubscription = await registration.pushManager.subscribe(
             {
                 userVisibleOnly: true,
