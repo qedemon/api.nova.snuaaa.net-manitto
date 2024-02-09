@@ -24,7 +24,7 @@ function attachRegisterPush(app){
                     result: Result.success,
                     user: {
                         user_id: user.user_id,
-                        subscription: user.Push.subscription
+                        subscription: user.push.subscription
                     }
                 }
             );

@@ -1,36 +1,19 @@
-const {createSequelize, closeSequelize} = require("modules/sequelize");
-const defineModels = require("models");
+const {connect} = require("modules/mongoose");
+const {User} = require("models/mongoDB");
 const getVAPIDKey = require("./getVAPIDKey");
 const webpush = require("web-push");
 
-async function sendPush(user_id, data, loadedSequelize = null){
-    const sequelize = loadedSequelize || (await createSequelize()).sequelize;
-    const Sequelize = sequelize.Sequelize;
-    const {DataTypes} = Sequelize;
-    const {User, Push} = defineModels(sequelize, DataTypes);
+async function sendPush(user_id, data){
     try{
-        const user = await User.findOne(
-            {
-                where: {
-                    user_id
-                },
-                include: [
-                    Push
-                ]
-            }
-        );
-        if(!user){
-            throw new Error("unregistred user");
-        }
-        const push = user.Push;
+        const user = await User.findById(user_id);
+        const push = user.push;
         if(push){
-            const subscription = JSON.parse(push.subscription);
-            //console.log(subscription);
+            const subscription = push.subscription;
             const key = getVAPIDKey();
             const options = {
                 TTL: 24*60*60,
                 vapidDetails: {
-                    subject: "https://manitto.snuaaa.net:9889",
+                    subject: "https://manitto.snuaaa.net:8200",
                     publicKey: key.public,
                     privateKey: key.private
                 }
@@ -49,11 +32,6 @@ async function sendPush(user_id, data, loadedSequelize = null){
     catch(error){
         return {
             error
-        }
-    }
-    finally{
-        if(loadedSequelize===null){
-            closeSequelize(sequelize);
         }
     }
 }

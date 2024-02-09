@@ -21,7 +21,7 @@ async function getUser(condition){
         if(!user){
             throw new Error("no user");
         }
-        const connections = await getConnections({expired: true});
+        const connections = (await getConnections({expired: true})).documents??[];
 
         const followingsPromise = mergeConnections(
             connections
@@ -64,7 +64,7 @@ async function getUser(condition){
                             col_no,
                             major,
                             isAdmin,
-                            Following: followings,
+                            following: followings,
                             Schedule: schedule,
                             Mission: mission
                         }

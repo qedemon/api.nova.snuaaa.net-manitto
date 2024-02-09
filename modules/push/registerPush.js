@@ -1,54 +1,26 @@
-const {createSequelize, closeSequelize} = require("modules/sequelize");
-const defineModels = require("models");
+const {connect} = require("modules/mongoose");
+const {User} = require("models/mongoDB");
 
-async function registerPush(user_id, subscription, loadedSequelize = null){
-    const sequelize = loadedSequelize || (await createSequelize()).sequelize;
-    const Sequelize = sequelize.Sequelize;
-    const {DataTypes} = Sequelize;
-    const {User, Push} = defineModels(sequelize, DataTypes);
+async function registerPush(user_id, subscription){
     try{
-        const user = await User.findOne(
-            {
-                where: {
-                    user_id
-                },
-                include: [
-                    Push
-                ]
-            }
-        );
+        await connect();
+        const user = await User.findById(user_id);
         if(!user){
-            throw new Error("unregistred user");
+            throw new Error(`unregistered user: ${user_id}`)
         }
-        const push = user.Push;
-        if(push){
-            push.subscription = JSON.stringify(subscription);
-            await push.save();
-        }
-        else{
-            await user.createPush(
-                {
-                    subscription: JSON.stringify(subscription)
-                }
-            )
-        }
-        await user.reload(
-            {
-                include: [Push]
-            }
-        )
         return {
-            user
+            user: await user.set(
+                {
+                    push: {
+                        subscription
+                    }
+                }
+            ).save()
         }
     }
     catch(error){
         return {
             error
-        }
-    }
-    finally{
-        if(loadedSequelize===null){
-            closeSequelize(sequelize);
         }
     }
 }
