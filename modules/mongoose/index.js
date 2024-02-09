@@ -7,7 +7,7 @@ async function connect(){
         return connection;
     }
     const {MONGO_HOST, MONGO_USER, MONGO_PASSWORD, MONGO_DBNAME, MONGO_PORT} = process.env;
-    const conn = await mongoose.connect(`mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:${MONGO_PORT}/${MONGO_DBNAME}`);
+    const conn = await mongoose.connect(`mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:${MONGO_PORT}/${MONGO_DBNAME}`, {autoIndex: false});
     connection = conn;
     return connection;
 }

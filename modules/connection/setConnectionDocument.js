@@ -1,12 +1,8 @@
-const {createSequelize, closeSequelize} = require("modules/sequelize");
-const defineModel = require("models");
 const {convertDateToUnit, convertUnitToDate} = require("modules/Utility/convertDate");
 const getNow = require("modules/Utility/getNow");
-const getToday = require("modules/Utility/getToday");
-const getConnectionDocument = require("./getConnectionDocument");
-const connect = require("./connect");
-const disconnect = require("./disconnect");
-const {sendPush} = require("modules/push/module");
+const getConnectionDocumentAt = require("./getConnectionDocumentAt");
+const setConnections = require("./setConnections");
+const {convertDateToSession, sessions} = require("modules/Utility/Session");
 
 function getUpdate(prevData, data){
     const newConnections = data.connectionGroups.reduce(
@@ -49,132 +45,79 @@ function getUpdate(prevData, data){
         },
         []
     );
-    /*console.log("new", newConnections);
-    console.log("prev", prevConnections);
-    console.log("connect", planToConnect);
-    console.log("disconnect", planToDisconnect);*/
     return {
-        toConnect: planToConnect,
-        toDisconnect: planToDisconnect
+        toConnect: planToConnect.filter(({followee_id})=>followee_id),
+        toDisconnect: [...planToDisconnect, ...planToConnect.filter(({followee_id})=>followee_id??false)]
     }
 }
 
-async function setConnectionDocument(day, data, loadedSequelize=null, today=getToday()){
-    const sequelize = loadedSequelize || (await createSequelize()).sequelize;
-    const Sequelize = sequelize.Sequelize;
-    const {DataTypes, Op} = Sequelize;
+async function setConnectionDocument(targetSessionNo, data, at=getNow()){
     try{
-        if(day<today)
-            return {
-                day,
-                data: (await getConnectionDocument(day, sequelize, today)).data,
-            };
-        const prevData = await (
-            async ()=>{
-                const {data, error} = await getConnectionDocument(day, sequelize, today);
-                if(error){
-                    throw error;
-                }
-                return data
-            }
-        )();
-        
-        const updates = getUpdate(prevData, data);
-        const disconnected = await updates.toDisconnect.reduce(
-            async (last, toDisconnect)=>{
-                const result = await last;
-                const {error, disconnected} = await disconnect(toDisconnect.follower_id, toDisconnect.followee_id, sequelize, (day>today)?{willBeValid: day}:{});
-                if(error){
-                   return result; 
-                }
-                return [...result, ...disconnected]
-            },
-            Promise.resolve([])
-        );
-        const {connected, disconnected: additionalDisconnected} = await updates.toConnect.reduce(
-            async (last, toConnect)=>{
-                const result = await last;
-                if(toConnect.followee_id){
-                    const {error, connected, disconnected} = await connect(toConnect.follower_id, toConnect.followee_id, sequelize, (day>today)?{willBeValid: day}:{});
-                    if(error){
-                        return result;
-                    }
-                    return {
-                        connected: [...result.connected, ...connected],
-                        disconnected: [...result.disconnected, ...disconnected]
-                    };
-                }
-                else{
-                    const {error, disconnected} = await disconnect(toConnect.follower_id, null, sequelize, (day>today)?{willBeValid: day}:{});
-                    if(error){
-                        return result;
-                    }
-                    return {
-                        connected: result.connected,
-                        disconnected: [...result.disconnected, ...disconnected]
-                    }
-                }
-            },
-            Promise.resolve({connected:[], disconnected:[]})
-        );
+        const targetSession = sessions[targetSessionNo];
+        const {newDocument, disconnected, connected, revoke} = await (
+            async (targetDocument, targetSessionNo, targetSession, at)=>{
+                const {sessionNo: currentSessionNo, session: currentSession} = convertDateToSession(at);
+                const targetAt = (targetSessionNo===currentSessionNo)?
+                    at:
+                    (targetSessionNo<currentSessionNo)?
+                        targetSession.endAt:
+                        targetSession.startAt;
 
-        console.log(`day${day}`, "disconnected", [...disconnected, ...additionalDisconnected]);
-        console.log(`day${day}`, "connected", connected);
-        if(day === today){
-            const pushList = [...(new Set([...disconnected, ...additionalDisconnected, ...connected].map(({follower_id})=>follower_id)))];
-            console.log(`day ${day} pushList`, pushList);
-            const pushed = (
-                await Promise.all(
-                    pushList.map(
-                        async (user_id)=>{
-                            return await sendPush(user_id, 
-                                {
-                                    title: "AAA-Manitto",
-                                    body: "마니또가 바뀌었어요"
-                                }
-                            );
-                        }
+                const prevDocument = {
+                    at: targetAt,
+                    ...(await getConnectionDocumentAt(targetAt)).data
+                };
+                if(targetSessionNo<currentSessionNo){
+                    return {
+                        newDocument: prevDocument,
+                        disconnected: [],
+                        connected: []
+                    }
+                }
+                const connections = {
+                    validAt: targetAt,
+                    expiredAt: targetSession.endAt,
+                    connections: targetDocument.connectionGroups.reduce(
+                        (result, connectionGroup)=>{
+                            return [...result, ...connectionGroup]
+                        },
+                        []
                     )
-                )
-            ).reduce(
-                (result, {error, pushed})=>{
-                    if(error){
-                        return result;
-                    }
-                    return [...result, ...pushed];
-                },
-                []
-            );
-            console.log("pushlist: :", pushList.length, ", pushed: ", pushed.length);
-        }
-
-        
+                    .map(
+                        ({follower_id, followee_id})=>(
+                            {
+                                follower: follower_id,
+                                followee: followee_id
+                            }
+                        )
+                    )
+                }
+                const {inserted, revoke} = await setConnections(connections);
+                const {data: newDocument} = await getConnectionDocumentAt(targetAt);
+                const {toConnect: connected, toDisconnect: disconnected} = getUpdate(prevDocument, newDocument);
+                return {
+                    inserted,
+                    revoke,
+                    newDocument,
+                    disconnected,
+                    connected
+                };
+            }
+        )(data, targetSessionNo, targetSession, at)
         return {
-            day, 
+            day: targetSessionNo,
+            revoke,
             updates: {
-                disconnected: [...disconnected, ...additionalDisconnected].map(({follower_id, followee_id})=>{return {follower_id, followee_id}}),
+                disconnected: disconnected.map(({follower_id, followee_id})=>{return {follower_id, followee_id}}),
                 connected: connected.map(({follower_id, followee_id})=>{return {follower_id, followee_id}})
             },
-            data: await (
-                async ()=>{
-                    const {data, error} = await getConnectionDocument(day, sequelize, today);
-                    if(error){
-                        throw error;
-                    }
-                    return data
-                }
-            )()
+            data: newDocument
         }
     }
     catch(error){
         console.error(error);
         return {
             error
-        }
-    }
-    finally{
-        if(loadedSequelize===null){
-            await closeSequelize(sequelize);
         }
     }
 }
