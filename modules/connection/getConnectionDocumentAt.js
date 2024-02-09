@@ -12,7 +12,9 @@ async function getConnectionDocumentAt(at=getNow()){
         if(error){
             throw error;
         }
-        const connections = documents[0].connections.map(({follower, followee})=>({follower_id: follower, followee_id: followee}));
+        const connections = documents[0]?
+        documents[0].connections.map(({follower, followee})=>({follower_id: follower, followee_id: followee})):
+        [];
 
         const connectedIds = Array.from(
             new Set(
@@ -40,8 +42,9 @@ async function getConnectionDocumentAt(at=getNow()){
         const connected = (
             await Promise.all(
                 connectedIds.map(
-                    (userId)=>{
-                        return User.findById(userId).exec()
+                    async (userId)=>{
+                        const user = await User.findById(userId).exec();
+                        return user;
                     }
                 )
             )
@@ -73,6 +76,7 @@ async function getConnectionDocumentAt(at=getNow()){
         
         return {
             data: {
+                at,
                 disconnected,
                 connected,
                 connectionGroups
