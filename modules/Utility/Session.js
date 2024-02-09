@@ -1,13 +1,13 @@
 const reference = [
     {
-        endAt: new Date("2024-02-03T23:00:00+09:00")
+        endAt: new Date("2024-02-03T09:00:00+09:00")
     },
     {
-        startAt: new Date("2024-02-03T23:00:00+09:00"),
-        endAt: new Date("2024-02-04T23:00:00+09:00")
+        startAt: new Date("2024-02-03T09:00:00+09:00"),
+        endAt: new Date("2024-02-04T09:00:00+09:00")
     },
     {
-        startAt: new Date("2024-02-04T23:00:00+09:00")
+        startAt: new Date("2024-02-04T09:00:00+09:00")
     }
 ];
 

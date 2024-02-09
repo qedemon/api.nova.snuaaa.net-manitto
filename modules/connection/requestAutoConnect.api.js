@@ -18,7 +18,7 @@ function attachRquestAutoConnect(app){
             if(!data){
                 throw new Error("invalid data");
             }
-            const {error, command: executed, data: newData} = await autoConnect(command, data);
+            const {error, command: executed, data: newData, input, output} = await autoConnect(command, data);
             if(error){
                 throw error;
             }
@@ -26,6 +26,8 @@ function attachRquestAutoConnect(app){
                 {
                     result: Result.success,
                     command: executed,
+                    input,
+                    output,
                     data: newData
                 }
             )

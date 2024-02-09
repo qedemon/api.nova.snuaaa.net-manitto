@@ -1,6 +1,5 @@
-const {convertDateToUnit} = require("modules/Utility/convertDate");
 const getNow = require("modules/Utility/getNow");
-const getToday = require("modules/Utility/getToday");
+const {convertDateToSession} = require("modules/Utility/Session");
 const executeAutoConnect = require("./executeAutoConnect");
 const getConnectionGroups = require("modules/Utility/connectionGroups");
 
@@ -44,7 +43,7 @@ function editData(inputData, connections){
     )
 }
 
-async function autoConnect(command, inputData, today=getToday()){
+async function autoConnect(command, inputData, sessionNo=convertDateToSession(getNow()).sessionNo){
     try{
         const commands = {
             "linear": "1",
@@ -74,7 +73,6 @@ async function autoConnect(command, inputData, today=getToday()){
                 )
             ).values()
         );
-        console.log(users.length);
     
         const connections = inputData.map(
             ({connectionGroups})=>{
@@ -87,22 +85,23 @@ async function autoConnect(command, inputData, today=getToday()){
                 )
             }
         );
-        const {data: connectData, error} = await executeAutoConnect(
-            {
-                users,
-                connections0: connections[0]??[],
-                connections1: connections[1]??[],
-                connections2: connections[2]??[],
-                command: selectedCommand,
-                day: today
-            }
-        )
+        const input = {
+            users,
+            connections0: connections[0]??[],
+            connections1: connections[1]??[],
+            connections2: connections[2]??[],
+            command: selectedCommand,
+            day: sessionNo
+        };
+        const {data: connectData, error} = await executeAutoConnect(input)
         if(error){
             throw error;
         }
 
         return {
             command: selectedCommand,
+            input,
+            output: connectData,
             data: editData(inputData, connectData.connections)
         }
     }
