@@ -6,6 +6,9 @@ async function getConnections(include = {}, at=getNow()){
     try{
         await connectMongo();
         const filter = {
+            validAt: {
+                $lt: "expiredAt"
+            }
         };
         if(!include.willBeValid){
             filter.validAt = {
@@ -23,7 +26,9 @@ async function getConnections(include = {}, at=getNow()){
                 return validAt<=expiredAt;
             }
         ))
-        return result;
+        return {
+            documents: result
+        };
     }
     catch(error){
         return {

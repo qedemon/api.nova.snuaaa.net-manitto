@@ -7,11 +7,13 @@ test("getConnectionDocument", async ()=>{
         throw error;
     }
     const {connectionGroups} = data;
-    connectionGroups.every(
-        (group)=>{
-            const last = group[group.length-1];
-            const first = group[0];
-            return (first.follower_id === last.followee_id) || (last.followee_id===null);
-        }
-    )
+    expect(
+        connectionGroups.every(
+            (group)=>{
+                const last = group[group.length-1];
+                const first = group[0];
+                return (first.follower_id === last.followee_id) || (last.followee_id===null);
+            }
+        )
+    ).toBe(true);
 })

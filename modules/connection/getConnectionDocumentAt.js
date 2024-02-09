@@ -8,8 +8,11 @@ const getConnectionGroups = require("modules/Utility/connectionGroups");
 async function getConnectionDocumentAt(at=getNow()){
     try{
         await connect();
-        const connections = (await getConnections({}, at))[0]
-        .connections.map(({follower, followee})=>({follower_id: follower, followee_id: followee}));
+        const {documents, error} = await getConnections({}, at);
+        if(error){
+            throw error;
+        }
+        const connections = documents[0].connections.map(({follower, followee})=>({follower_id: follower, followee_id: followee}));
 
         const connectedIds = Array.from(
             new Set(
