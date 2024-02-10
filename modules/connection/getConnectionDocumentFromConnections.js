@@ -48,6 +48,7 @@ async function getConnectionDocumentFromConnections(inputConnections, from=getNo
         )
         const shouldBeConnected = await User.find(
             {
+                isAdmin: false,
                 "schedule.enter_at": {
                     $lte: expiredAt,
                     $lte: from
