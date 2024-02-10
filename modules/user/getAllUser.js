@@ -13,7 +13,7 @@ async function getAllUser(at=getNow()){
                 isAdmin: false
             }
         ).populate("mission");
-        const connections = await getConnections({expired: true});
+        const {documents: connections} = await getConnections({expired: true});
         const userDistributables = ({_id, name, col_no, major, schedule})=>{
             return {
                 user_id: _id,
