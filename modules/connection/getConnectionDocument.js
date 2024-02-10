@@ -9,7 +9,7 @@ async function getConnectionDocument(targetSessionNo, at=getNow()){
         const targetAt = (
             (targetSessionNo, targetSession, sessionFrom, at)=>{
                 if(targetSessionNo<sessionFrom.sessionNo){
-                    return targetSession.endAt;
+                    return new Date(targetSession.endAt.getTime()-1000);//만료 1초 전
                 }
                 else if(targetSessionNo === sessionFrom.sessionNo){
                     return at;

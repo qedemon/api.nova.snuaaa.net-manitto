@@ -2,6 +2,7 @@ const express = require("express");
 const authorize = require("modules/authorize/middleware");
 const Result = require("modules/Utility/Result");
 const {setConnectionDocument}= require("./module");
+const {sendPush} = require("modules/push/module");
 
 function attachPostConnectionDocument(app){
     app.use("/postConnectionDocument", authorize);
@@ -15,7 +16,24 @@ function attachPostConnectionDocument(app){
             if(!data){
                 throw new Error("invalid data");
             }
-            const {error, day:newDay, data: newData, updates} = await setConnectionDocument(day, data);
+            const {error, day:newDay, data: newData, updates, isCurrent} = await setConnectionDocument(day, data);
+            
+            const usersToUpdate = isCurrent?
+                Array.from(
+                    new Set(
+                        [...updates.disconnected, ...updates.connected].map(({follower_id})=>follower_id)
+                    )
+                ):[];
+            console.log("Push To: ", usersToUpdate);
+            usersToUpdate.map(
+                async (user_id)=>{
+                    await sendPush(user_id, {
+                        title: "AAA-Manitto",
+                        body: "마니또가 바뀌었어요."
+                    })
+                }
+            )
+            
             if(error){
                 throw error;
             }

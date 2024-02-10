@@ -5,7 +5,7 @@ const {convertDateToUnit, convertUnitToDate} = require("modules/Utility/convertD
 const getNow = require("modules/Utility/getNow");
 const getConnectionGroups = require("modules/Utility/connectionGroups");
 
-async function getConnectionDocumentAt(at=getNow()){
+async function getConnectionDocumentAt(at=getNow(), from=getNow()){
     try{
         await connect();
         const {documents, error} = await getConnections({}, at);
@@ -55,7 +55,8 @@ async function getConnectionDocumentAt(at=getNow()){
             {
                 isAdmin: false,
                 "schedule.enter_at": {
-                    $lte: at
+                    $lte: at,
+                    $lte: from
                 },
                 "schedule.exit_at": {
                     $gte: at

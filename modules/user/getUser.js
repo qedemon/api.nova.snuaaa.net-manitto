@@ -22,7 +22,6 @@ async function getUser(condition){
             throw new Error("no user");
         }
         const connections = (await getConnections({expired: true})).documents??[];
-
         const followingsPromise = mergeConnections(
             connections
             .map(
@@ -50,9 +49,10 @@ async function getUser(condition){
                         name, col_no, major, exit_at: schedule?.exit_at, start, end, isValid
                     }
                 }
+                return {isValid: false}
             }
-        );
-        const followings = await Promise.all(followingsPromise);
+        )
+        const followings = (await Promise.all(followingsPromise));
         return {
             user:
                 (
