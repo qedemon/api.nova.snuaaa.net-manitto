@@ -54,9 +54,12 @@ function getUpdate(prevData, data){
 async function setConnectionDocument(targetSessionNo, data, at=getNow()){
     try{
         const targetSession = sessions[targetSessionNo];
-        const {newDocument, disconnected, connected, revoke} = await (
+        const {newDocument, disconnected, connected, revoke, isCurrent} = await (
             async (targetDocument, targetSessionNo, targetSession, at)=>{
-                const {sessionNo: currentSessionNo, session: currentSession} = convertDateToSession(at);
+                const {sessionNo: currentSessionNo} = convertDateToSession(at);
+
+                const isCurrent = targetSessionNo===currentSessionNo;
+
                 const targetAt = (targetSessionNo===currentSessionNo)?
                     at:
                     (targetSessionNo<currentSessionNo)?
@@ -71,7 +74,11 @@ async function setConnectionDocument(targetSessionNo, data, at=getNow()){
                     return {
                         newDocument: prevDocument,
                         disconnected: [],
-                        connected: []
+                        connected: [],
+                        revoke: ()=>{
+                            return {}
+                        },
+                        isCurrent
                     }
                 }
                 const connections = {
@@ -100,12 +107,14 @@ async function setConnectionDocument(targetSessionNo, data, at=getNow()){
                     revoke,
                     newDocument,
                     disconnected,
-                    connected
+                    connected,
+                    isCurrent
                 };
             }
         )(data, targetSessionNo, targetSession, at)
         return {
             day: targetSessionNo,
+            isCurrent,
             revoke,
             updates: {
                 disconnected: disconnected.map(({follower_id, followee_id})=>{return {follower_id, followee_id}}),
