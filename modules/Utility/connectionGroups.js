@@ -71,18 +71,24 @@ function getConnectionGroups(connections){
             return groups;
         }
     )(connectionGroups);    //연결할 수 있는 것은 연결한다.
-    /*connectionGroups.map(
+    return connectionGroups.map(
         (group)=>{
             const remain = group.slice(0, group.length-1);
             const last = group[group.length-1];
             return [
                 ...remain,
-                (last?.followee_id === group[0]?.follower_id)?last:{...last, followee_id: null}
+                ...(last?.followee_id === group[0]?.follower_id)||!last.followee_id?
+                    [last]:
+                    [
+                        last, 
+                        {
+                            follower_id: last.followee_id, 
+                            followee_id: null
+                        }
+                    ]
             ]
         }
-    )*/
-    
-    return connectionGroups;
+    )
 }
 
 module.exports = getConnectionGroups;

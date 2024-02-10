@@ -32,6 +32,7 @@ function editData(inputData, connections){
                             }
                         }
                     );
+                    console.log(newConnections, getConnectionGroups(newConnections));
                     return {
                         disconnected: newDisconnected,
                         connected: newConnected,
