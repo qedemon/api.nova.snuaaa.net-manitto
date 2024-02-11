@@ -3,43 +3,60 @@ const {convertDateToSession} = require("modules/Utility/Session");
 const executeAutoConnect = require("./executeAutoConnect");
 const getConnectionGroups = require("modules/Utility/connectionGroups");
 
-function editData(inputData, connections){
-    return inputData.map(
-        (inputData, index)=>{
+function editData(connections, prevData, users){
+    return connections.map(
+        (connections, index)=>{
             return (
-                ({disconnected, connected}, connectionsToUpdate)=>{
-                    const users = [...disconnected, ...connected]
-                    .map(
-                        (
-                            (connections)=>(user)=>{
-                                const followingConnection = connections.find(({follower_id})=>follower_id===user.user_id);
-                                const followedConnection = connections.find(({followee_id})=>followee_id===user.user_id);
-                                return {
-                                    ...user,
-                                    following: followingConnection?.followee_id??null,
-                                    followed: followedConnection?.follower_id??null
-                                }
-                            }
-                        )(connectionsToUpdate)
-                    );
-                    const newDisconnected = users.filter(({following, followed})=>(following===null)&&(followed===null));
-                    const newConnected= users.filter(({following, followed})=>(following!==null)||(followed!==null));
-                    const newConnections = newConnected.map(
-                        ({following, user_id})=>{
-                            return {
-                                follower_id: user_id,
-                                followee_id: following
-                            }
+                (connections, prevData, users)=>{
+                    const connectedIds = Array.from
+                    (
+                        new Set(
+                            connections.reduce(
+                                (result, {follower_id, followee_id})=>{
+                                    return [
+                                        ...result, follower_id, followee_id
+                                    ]
+                                },
+                                []
+                            )
+                        )
+                    ).filter((id)=>id);
+                    const connected = connectedIds.map(
+                        (user_id)=>{
+                            const found = users.find(
+                                (user)=>(user.user_id === user_id)
+                            );
+                            return found??{
+                                user_id
+                            };
                         }
                     );
-                    console.log(newConnections, getConnectionGroups(newConnections));
+                    const shouldBeConnected = Array.from(
+                        (
+                            new Map(
+                                [
+                                    ...prevData.connected.map((user)=>[user.user_id, user]),
+                                    ...prevData.disconnected.map((user)=>[user.user_id, user])
+                                ]
+                            )
+                        ).values()
+                    )
+                    const disconnected = shouldBeConnected.filter(
+                        ({user_id: targetId})=>{
+                            return !connectedIds.some(
+                                (user_id)=>user_id===targetId
+                            )
+                        }
+                    )
+                    
+                    console.assert(connected.every((user)=>user), connected);
                     return {
-                        disconnected: newDisconnected,
-                        connected: newConnected,
-                        connectionGroups: getConnectionGroups(newConnections)
+                        disconnected,
+                        connected,
+                        connectionGroups: getConnectionGroups(connections)
                     }
                 }
-            )(inputData, connections[index])
+            )(connections, prevData[index], users)
         }
     )
 }
@@ -103,7 +120,7 @@ async function autoConnect(command, inputData, sessionNo=convertDateToSession(ge
             command: selectedCommand,
             input,
             output: connectData,
-            data: editData(inputData, connectData.connections)
+            data: editData(connectData.connections, inputData, users)
         }
     }
     catch(error){
