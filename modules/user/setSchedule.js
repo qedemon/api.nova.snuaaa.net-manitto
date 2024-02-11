@@ -10,7 +10,7 @@ async function setSchedule(user_id, schedule){
         return {
             user:
             (
-                ({user_id, name, col_no, major, Schedule:{enter_at, exit_at}})=>{
+                ({user_id, name, col_no, major, schedule:{enter_at, exit_at}})=>{
                     return {
                         user_id, name, col_no, major,
                         schedule: {
