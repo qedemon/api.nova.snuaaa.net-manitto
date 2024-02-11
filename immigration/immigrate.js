@@ -40,7 +40,7 @@ const run = async ()=>{
                 major,
                 schedule: {
                     enter_at: new Date(Schedule.enter_at),
-                    exit_at: new Date(Schedule.exit_at)
+                    exit_at: new Date(Schedule.exit_at.getTime()-9*60*60*1000)
                 },
                 mission: Mission.id,
                 push: Push?
@@ -118,11 +118,10 @@ const run = async ()=>{
                 validAt,
                 expiredAt,
                 connections: validConnections.map(
-                    ({followerId, followeeId, id})=>{
+                    ({followerId, followeeId})=>{
                         return {
-                            follower: followerId,
-                            followee: followeeId,
-                            id
+                            follower: followerId??23,
+                            followee: followeeId??23,
                         }
                     }
                 )

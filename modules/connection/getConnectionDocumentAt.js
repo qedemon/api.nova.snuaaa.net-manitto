@@ -20,14 +20,18 @@ async function getConnectionDocumentAt(at=getNow(), from=getNow()){
         const {disconnected, connected, connectionGroups} = await
         (
             async (connections, at, from)=>{
-                const {document, error} = await getConnectionDocumentFromConnections(
+                const shouldBeConnected = await User.find(
                     {
-                        validAt: at,
-                        expiredAt: at,
-                        connections
-                    },
-                    from
+                        isAdmin: false,
+                        "schedule.enter_at": {
+                            $lte: from
+                        },
+                        "schedule.exit_at": {
+                            $gte: at
+                        }
+                    }
                 );
+                const {document, error} = await getConnectionDocumentFromConnections(connections, shouldBeConnected);
                 if(error){
                     throw error;
                 }
