@@ -1,6 +1,6 @@
 const {convertDateToUnit, convertUnitToDate} = require("modules/Utility/convertDate");
 const getNow = require("modules/Utility/getNow");
-const getConnectionDocumentAt = require("./getConnectionDocumentAt");
+const getConnectionDocument = require("./getConnectionDocument");
 const setConnections = require("./setConnections");
 const {convertDateToSession, sessions} = require("modules/Utility/Session");
 
@@ -100,7 +100,7 @@ async function setConnectionDocument(targetSessionNo, data, at=getNow()){
                     )
                 }
                 const {inserted, revoke} = await setConnections(connections);
-                const {data: newDocument} = await getConnectionDocumentAt(targetAt);
+                const {data: newDocument} = await getConnectionDocument(targetSessionNo, at);
                 const {toConnect: connected, toDisconnect: disconnected} = getUpdate(prevDocument, newDocument);
                 return {
                     inserted,
