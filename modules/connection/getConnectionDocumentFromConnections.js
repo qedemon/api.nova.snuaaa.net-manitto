@@ -5,9 +5,9 @@ const {convertDateToUnit} = require("modules/Utility/convertDate");
 const getNow = require("modules/Utility/getNow");
 
 function distributables(user){
-    const {_id: user_id, name, col_no, major, schedule} = user;
+    const {_id, user_id, name, col_no, major, schedule} = user;
     return {
-        user_id,
+        user_id: user_id??_id,
         name,
         col_no,
         major,
@@ -21,12 +21,11 @@ function distributables(user){
     }
 }
 
-async function getConnectionDocumentFromConnections(inputConnections, from=getNow()){
-    const {validAt, expiredAt, connections} = inputConnections;
+async function getConnectionDocumentFromConnections(inputConnections, shouldBeConnected){
     try{
         const connectedIds = Array.from(
             new Set(
-                connections.reduce(
+                inputConnections.reduce(
                     (result, {follower, followee})=>{
                         return [
                             ...result,
@@ -41,23 +40,15 @@ async function getConnectionDocumentFromConnections(inputConnections, from=getNo
         const connected = await Promise.all(
             connectedIds.map(
                 async (userId)=>{
-                    const user = await User.findById(userId);
-                    return distributables(user);
+                    const user = shouldBeConnected.find(
+                        (user)=>userId===user.user_id
+                    )
+                    return distributables(
+                        user??(await User.findById(userId))
+                    );
                 }
             )
         )
-        const shouldBeConnected = await User.find(
-            {
-                isAdmin: false,
-                "schedule.enter_at": {
-                    $lte: expiredAt,
-                    $lte: from
-                },
-                "schedule.exit_at": {
-                    $gte: validAt
-                }
-            }
-        );
         const disconnected = shouldBeConnected.filter(
             ({_id: user_id})=>{
                 const connectedId = connectedIds.find(({id})=>id===user_id);
@@ -66,11 +57,13 @@ async function getConnectionDocumentFromConnections(inputConnections, from=getNo
         ).map(
             (user)=>distributables(user)
         );
+
+        console.assert(connected.every((user)=>user), connected);
         return {
             document: {
                 disconnected,
                 connected,
-                connectionGroups: connectionGroups(connections.map(({follower, followee})=>({follower_id: follower, followee_id: followee})))
+                connectionGroups: connectionGroups(inputConnections.map(({follower, followee})=>({follower_id: follower, followee_id: followee})))
             }
         }
     }

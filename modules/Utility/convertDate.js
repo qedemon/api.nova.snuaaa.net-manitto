@@ -19,7 +19,8 @@ const reference = [
     ]
 ]
 
-function convertDateToUnit(date){
+function convertDateToUnit(dateDescription){
+    const date = new Date(dateDescription);
     for(let i = 0; i<reference.length; i++){
         for(let j=0; j<reference[i].length; j++){
             if(date<=reference[i][j]){
