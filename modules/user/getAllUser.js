@@ -1,5 +1,5 @@
 const {connect} = require("modules/mongoose");
-const {User, ConnectionDocument} = require("models/mongoDB");
+const {User} = require("models/mongoDB");
 const {getConnections} = require("modules/connection/module");
 const {convertDateToUnit} = require("modules/Utility/convertDate");
 const getNow = require("modules/Utility/getNow");
