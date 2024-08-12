@@ -3,18 +3,18 @@ const {convertDateToSession} = require("modules/Utility/Session");
 const executeAutoConnect = require("./executeAutoConnect");
 const getConnectionDocumentFromConnections = require("./getConnectionDocumentFromConnections");
 
-async function editData(connections, prevData){
+async function editData(connections, inputData){
     return Promise.all(
         connections.map(
             (connections, index)=>{
                 return (
-                    async (connections, prevData)=>{
+                    async (connections, inputData)=>{
                         const shouldBeConnected = Array.from(
                             (
                                 new Map(
                                     [
-                                        ...prevData.connected.map((user)=>[user.user_id, user]),
-                                        ...prevData.disconnected.map((user)=>[user.user_id, user])
+                                        ...inputData.connected.map((user)=>[user.user_id, user]),
+                                        ...inputData.disconnected.map((user)=>[user.user_id, user])
                                     ]
                                 )
                             ).values()
@@ -23,7 +23,8 @@ async function editData(connections, prevData){
                                 user.schedule = user.Schedule;
                                 return user;
                             }
-                        )
+                        );
+                        
                         return (
                             await getConnectionDocumentFromConnections(
                                 connections.map(
@@ -42,7 +43,7 @@ async function editData(connections, prevData){
                             connectionGroups: []
                         };
                     }
-                )(connections, prevData[index])
+                )(connections, inputData[index])
             }
         )
     );
@@ -102,6 +103,7 @@ async function autoConnect(command, inputData, sessionNo=convertDateToSession(ge
         if(error){
             throw error;
         }
+
         return {
             command: selectedCommand,
             input,

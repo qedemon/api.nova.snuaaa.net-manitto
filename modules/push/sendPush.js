@@ -19,6 +19,7 @@ async function sendPush(user_id, data){
                 }
             };
             await webpush.sendNotification(subscription, JSON.stringify(data), options);
+            console.log(`send ${user_id}:${data}`)
             return {
                 pushed: [data]
             };

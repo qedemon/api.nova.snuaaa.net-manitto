@@ -37,6 +37,7 @@ async function getConnectionDocumentFromConnections(inputConnections, shouldBeCo
                 )
             )
         ).filter((item)=>item);
+
         const connected = await Promise.all(
             connectedIds.map(
                 async (userId)=>{
@@ -48,10 +49,11 @@ async function getConnectionDocumentFromConnections(inputConnections, shouldBeCo
                     );
                 }
             )
-        )
+        );
+
         const disconnected = shouldBeConnected.filter(
-            ({_id: user_id})=>{
-                const connectedId = connectedIds.find(({id})=>id===user_id);
+            ({user_id})=>{
+                const connectedId = connectedIds.find((id)=>id===user_id);
                 return !connectedId;
             }
         ).map(
