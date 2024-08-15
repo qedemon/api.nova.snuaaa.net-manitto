@@ -10,7 +10,12 @@ app.post("/", async (req, res)=>{
         if(authenticated){
             return {
                 authenticated,
-                userInfo,
+                userInfo: (
+                    (userInfo)=>{
+                        const {password, ...ramain} = userInfo??{};
+                        return ramain;
+                    }
+                )(userInfo), //password 제거
                 token
             }
         }
