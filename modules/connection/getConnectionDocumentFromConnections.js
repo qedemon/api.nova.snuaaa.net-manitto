@@ -37,7 +37,7 @@ async function getConnectionDocumentFromConnections(inputConnections, shouldBeCo
                 )
             )
         ).filter((item)=>item);
-
+        
         const connected = await Promise.all(
             connectedIds.map(
                 async (userId)=>{

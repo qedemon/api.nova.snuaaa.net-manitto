@@ -99,6 +99,7 @@ async function autoConnect(command, inputData, sessionNo=convertDateToSession(ge
             command: selectedCommand,
             day: sessionNo
         };
+        console.log(convertDateToSession(getNow()))
         const {data: connectData, error} = await executeAutoConnect(input)
         if(error){
             throw error;

@@ -50,7 +50,11 @@
         "description": "같이 셀카 찍기",
         "difficulty": 2
     },
-
+    {
+        "title": "마니또가 좋아하는 선물주기",
+        "description": "마니또가 좋아하는 선물주기",
+        "difficulty": 2
+    },
     {
         "title": "외계인의 존재에 대한 마니또의 견해 알아오기",
         "description": "외계인의 존재에 대한 마니또의 견해 알아오기",
@@ -64,6 +68,11 @@
     {
         "title": "마니또에게 아재개그하고 반응보기",
         "description": "마니또에게 아재개그하고 반응보기",
+        "difficulty": 3
+    },
+    {
+        "title": "마니또 스트레칭 시키기",
+        "description": "마니또 스트레칭 시키기",
         "difficulty": 3
     }
 ]
