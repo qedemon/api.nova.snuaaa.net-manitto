@@ -61,10 +61,10 @@ async function setConnectionDocument(targetSessionNo, data, at=getNow()){
 
                 const isCurrent = targetSessionNo===currentSessionNo;
 
-                const targetAt = (targetSessionNo===currentSessionNo)?
+                const targetAt = isCurrent?
                     at:
                     (targetSessionNo<currentSessionNo)?
-                        targetSession.endAt:
+                        targetSession.endAt-1:
                         targetSession.startAt;
 
                 const prevDocument = {
